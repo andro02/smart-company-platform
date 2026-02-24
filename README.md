@@ -29,3 +29,5 @@ npm install
 ```bash
 npm run start
 ```
+
+3. Automatski se kreira superadmin nalog sa username-om admin, dok se sifra nalazi u superadmin.txt file-u u izvornom direktorijumu backend-a (back/smartcompany)
