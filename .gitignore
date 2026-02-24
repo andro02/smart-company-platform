@@ -6,3 +6,5 @@ front/smart-company-app/dist/
 
 # Root dev tools
 npm-debug.log
+
+.vscode
