@@ -1,0 +1,42 @@
+<div class="container">
+    <h2 class="text-center pt-5 mt-3">Log In</h2>
+    <div class="row justify-content-center align-items-center">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="w-50">
+            <div class="form-group">
+                <label for="username" class="">Username:</label><br>
+                <input type="text"
+                    class="form-control"
+                    formControlName="username"
+                    placeholder="Username"
+                    [ngClass]="{
+                        'is-invalid': loginForm.get('username')?.invalid && loginForm.get('username')?.touched,
+                        'is-valid': loginForm.get('username')?.valid && loginForm.get('username')?.touched
+                    }">
+                <div *ngIf="loginForm.get('username')?.invalid && loginForm.get('username')?.touched" class="text-danger small">
+                    This input is not valid!
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="password" class="">Password:</label><br>
+                <input type="password"
+                    class="form-control"
+                    formControlName="password"
+                    placeholder="Password"
+                    minlength="5"
+                    [ngClass]="{
+                        'is-invalid': loginForm.get('password')?.invalid && loginForm.get('password')?.touched,
+                        'is-valid': loginForm.get('password')?.valid && loginForm.get('password')?.touched
+                    }">
+                <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-danger small">
+                    This input is not valid!
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary mt-2 w-100">Log In</button>
+                <div id="register-link" class="text-right mt-3">
+                    <a [routerLink]="['/register']" class="text-info">Register here</a>
+                </div><br>
+            </div>
+        </form>
+    </div>
+</div>
