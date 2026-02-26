@@ -1,5 +1,5 @@
 <div class="container">
-    <h2 class="text-center pt-5 mt-3">Enter admin's information</h2>
+    <h2 class="text-center pt-5 mt-3">Enter manager's information</h2>
     <div class="row justify-content-center align-items-center">
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="w-75">
             <div class="form-group">
@@ -57,7 +57,10 @@
                     minlength="5"
                     placeholder="Confirm password"
                     [ngClass]="{
-                        'is-invalid': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched,
+                        'is-invalid': (
+                            registerForm.get('confirmPassword')?.invalid ||
+                            registerForm.hasError('passwordMismatch')
+                        ) && registerForm.get('confirmPassword')?.touched,
                         'is-valid': registerForm.get('confirmPassword')?.valid && registerForm.get('confirmPassword')?.touched
                     }">
                 <div *ngIf="registerForm.get('confirmPassword')?.errors?.['required']
@@ -70,11 +73,29 @@
                     class="text-danger small">
                 This input is not valid!
                 </div>
-                <div *ngIf="registerForm.get('confirmPassword')?.errors?.['mismatch']
+                <div *ngIf="registerForm.hasError('passwordMismatch')
                             && registerForm.get('confirmPassword')?.touched"
                     class="text-danger small">
                 Password must match.
                 </div>
+            </div>
+            <p class="mb-2">Profile picture</p>
+            <div class="custom-file">
+                <input 
+                    type="file"
+                    class="form-control"
+                    id="file"
+                    formControlName="file"
+                    (change)="onFileSelected($event, fileLabel)"
+                    [ngClass]="{
+                        'is-invalid': fileError,
+                        'is-valid': !fileError && registerForm.get('file')?.value
+                    }">
+                <label #fileLabel for="file" class="custom-file-label">Choose manager's profile picture</label>
+                <div *ngIf="(registerForm.get('file')?.invalid && formSubmitted) || fileError" class="text-danger small">
+                    This input is not valid!
+                </div>
+                <p class="text-danger small" *ngIf="fileError">{{ errorMessage }}</p>
             </div>
             <!-- <div class="form-group">
                 <label for="signUpAs">Register As</label>
