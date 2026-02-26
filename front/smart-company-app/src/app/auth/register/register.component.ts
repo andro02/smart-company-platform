@@ -6,6 +6,7 @@ import { AxiosService } from '../axios.service';
 import { UserType, User } from '../model/user';
 import { FileService } from '../../file.service';
 import { HttpClient } from '@angular/common/http';
+import { passwordMatchValidator } from '../../common/validators/password-match.validator';
 
 @Component({
   selector: 'app-register',
@@ -27,18 +28,19 @@ export class RegisterComponent {
   registerForm: FormGroup;
 
   constructor(public axios: AxiosService, private formBuilder: FormBuilder, private router: Router, private fileService: FileService, private http: HttpClient) {
-    this.registerForm = this.formBuilder.group({
-      email: ["", Validators.compose([Validators.required, Validators.email])],
-      password: ["", Validators.compose([Validators.required, Validators.minLength(5)])],
-      confirmPassword: ["", Validators.compose([Validators.required, Validators.minLength(5), this.passwordMatchValidator.bind(this)])],
-      username: ["", Validators.compose([Validators.required, Validators.minLength(5)])],
-      file: [null, Validators.compose([Validators.required])],
-      // type: ["Guest", [Validators.required]]
-    });
-    
-    this.registerForm.get('password')?.valueChanges.subscribe(() => {
-      this.registerForm.get('confirmPassword')?.updateValueAndValidity();
-    });
+    this.registerForm = this.formBuilder.group(
+      {
+        email: ["", Validators.compose([Validators.required, Validators.email])],
+        password: ["", Validators.compose([Validators.required, Validators.minLength(5)])],
+        confirmPassword: ["", Validators.compose([Validators.required, Validators.minLength(5)])],
+        username: ["", Validators.compose([Validators.required, Validators.minLength(5)])],
+        file: [null, Validators.compose([Validators.required])],
+        // type: ["Guest", [Validators.required]]
+      },
+      {
+        validators: passwordMatchValidator('password', 'confirmPassword')
+      }
+    );
   }
 
   onFileSelected(event: any, label: HTMLLabelElement) {
@@ -82,15 +84,6 @@ export class RegisterComponent {
     this.errorMessage = '';
 
     this.selectedFile = file;
-  }
-
-  passwordMatchValidator(control: AbstractControl) {
-    if (!control.parent) return null;
-
-    const password = control.parent.get('password')?.value;
-    const confirmPassword = control.value;
-
-    return password === confirmPassword ? null : { mismatch: true };
   }
 
   onSubmit(): void {

@@ -4,6 +4,7 @@ import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModu
 import { User, UserType } from '../model/user';
 import { Router } from '@angular/router';
 import { AxiosService } from '../axios.service';
+import { passwordMatchValidator } from '../../common/validators/password-match.validator';
 
 @Component({
   selector: 'app-change-password',
@@ -18,13 +19,15 @@ export class ChangePasswordComponent {
 
   constructor(private axios: AxiosService, private formBuilder: FormBuilder, private router: Router) { 
 
-    this.changePasswordForm = this.formBuilder.group({
-      password: ["", [Validators.required, Validators.minLength(5)]],
-      confirmPassword: ["", [Validators.required, Validators.minLength(5), this.passwordMatchValidator.bind(this)]],
-    });
-    this.changePasswordForm.get('password')?.valueChanges.subscribe(() => {
-      this.changePasswordForm.get('confirmPassword')?.updateValueAndValidity();
-    });
+    this.changePasswordForm = this.formBuilder.group(
+      {
+        password: ["", [Validators.required, Validators.minLength(5)]],
+        confirmPassword: ["", [Validators.required, Validators.minLength(5)]],
+      },
+      {
+        validators: passwordMatchValidator('password', 'confirmPassword')
+      }
+    );
 
   }
 
@@ -60,16 +63,6 @@ export class ChangePasswordComponent {
       this.axios.setAuthToken(null);
 
     });
-  }
-
-  passwordMatchValidator(control: AbstractControl) {
-
-    if (!control.parent) return null;
-
-    const password = control.parent.get('password')?.value;
-    const confirmPassword = control.value;
-
-    return password === confirmPassword ? null : { mismatch: true };
   }
 
 }
