@@ -30,6 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((requests) -> requests
                     .requestMatchers(HttpMethod.POST, "/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/register").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/register/customer").permitAll()
                     // .requestMatchers(HttpMethod.POST, "api/files/upload").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/files/presigned-url/get").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/files/presigned-url/put").permitAll()

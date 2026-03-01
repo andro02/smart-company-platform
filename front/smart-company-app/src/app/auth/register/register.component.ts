@@ -121,7 +121,7 @@ export class RegisterComponent {
                   res.filename
                 );
 
-                this.axios.request('POST', '/register', user)
+                this.axios.request('POST', '/register/customer', user)
                   .then(res => {
                     this.axios.setAuthToken(res.data.token);
                     this.router.navigate(['']);

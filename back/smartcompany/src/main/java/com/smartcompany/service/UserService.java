@@ -17,8 +17,6 @@ import com.smartcompany.exception.AppException;
 import com.smartcompany.model.User;
 import com.smartcompany.model.UserType;
 import com.smartcompany.repository.UserRepository;
-import com.smartcompany.service.ActivationTokenService;
-import com.smartcompany.service.EmailService;
 import com.smartcompany.service.UserService;
 
 @Service
@@ -67,7 +65,7 @@ public class UserService {
         throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
     }
     
-    public UserDto register(SignUpDto userDto) {
+    public UserDto registerCustomer(SignUpDto userDto) {
     	
     	Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
 
@@ -76,6 +74,7 @@ public class UserService {
         }
         
         User user = signUpToUser(userDto);
+        user.setType(UserType.Customer);
         user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
 
         if (!user.isActive() && !user.getType().equals(UserType.SuperAdmin)) {

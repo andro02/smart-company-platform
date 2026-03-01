@@ -49,11 +49,11 @@ public class UserController {
         return ResponseEntity.ok(userDto);
 	}
 	
-	@PostMapping("/register")
+	@PostMapping("/register/customer")
     public ResponseEntity<UserDto> register(@RequestBody @Valid SignUpDto user) {
         UserDto createdUser;
 		try {
-			createdUser = userService.register(user);
+			createdUser = userService.registerCustomer(user);
 		} catch (Exception e) {
 			return new ResponseEntity<UserDto>(HttpStatus.BAD_REQUEST);
 		}
