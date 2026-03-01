@@ -14,10 +14,10 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class CustomAuthorityDeserializer extends JsonDeserializer {
+public class CustomAuthorityDeserializer extends JsonDeserializer<List<GrantedAuthority>> {
 
     @Override
-    public Object deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+    public List<GrantedAuthority> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
         ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         JsonNode jsonNode = mapper.readTree(jp);
         List<GrantedAuthority> grantedAuthorities = new LinkedList<>();
