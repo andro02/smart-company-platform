@@ -40,19 +40,12 @@ export class ChangePasswordComponent {
 
     const submitData = this.changePasswordForm.value;
 
-    const updatedUser = new User(
-      this.axios.getUsername(), 
-      submitData.password, 
-      this.axios.getRole() as UserType, 
-      true, 
-      this.axios.getUser()!.email, 
-      this.axios.getUser()!.image
-    );
-
     this.axios.request(
       "PUT",
-      "/account/" + updatedUser.username,
-      updatedUser
+      "/account/change-password",
+      {
+        newPassword: submitData.password
+      }
     ).then(response => {
 
       this.axios.setAuthToken(response.data.token);
