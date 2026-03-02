@@ -7,9 +7,12 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.smartcompany.dto.ChangePasswordDto;
 import com.smartcompany.dto.CredentialsDto;
 import com.smartcompany.dto.SignUpDto;
 import com.smartcompany.dto.UserDto;
@@ -92,6 +95,51 @@ public class UserService {
         return toUserDto(savedUser);
     }
 
+    public UserDto registerManager(SignUpDto userDto) {
+    	
+    	Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
+
+        if (optionalUser.isPresent()) {
+            throw new AppException("Username already exists", HttpStatus.BAD_REQUEST);
+        }
+        
+        User user = signUpToUser(userDto);
+        user.setActive(false);
+        user.setType(UserType.Manager);
+        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
+
+        // if (!user.isActive() && (!user.getType().equals(UserType.SuperAdmin) || !user.getType().equals(UserType.Manager))) {
+        //     String baseUrl = "http://localhost:4200";
+        //     String token = tokenService.generateActivationToken();
+    
+        //     user.setActivationToken(token);
+        //     String activationLink = baseUrl + "/activate?username=" + user.getUsername() + "&token=" + token;
+
+        //     emailService.sendActivationEmail(user.getEmail(), activationLink);
+        // }
+
+        User savedUser = userRepository.save(user);
+
+        return toUserDto(savedUser);
+    }
+
+    public UserDto registerSuperAdmin(SignUpDto userDto) {
+    	
+    	Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
+
+        if (optionalUser.isPresent()) {
+            throw new AppException("Username already exists", HttpStatus.BAD_REQUEST);
+        }
+        
+        User user = signUpToUser(userDto);
+        user.setType(UserType.SuperAdmin);
+        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
+
+        User savedUser = userRepository.save(user);
+
+        return toUserDto(savedUser);
+    }
+
 	public UserDto update(SignUpDto signUpDto, String username) throws Exception {
 		User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
@@ -111,6 +159,19 @@ public class UserService {
 
         return toUserDto(savedUser);
 	}
+
+    public void changePassword(ChangePasswordDto dto) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDto loggedUser = (UserDto) authentication.getPrincipal();
+
+        User user = userRepository.findByUsername(loggedUser.getUsername())
+            .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+
+        userRepository.save(user);
+    }
 	
 	public void delete(String username) {
 		userRepository.deleteById(username);

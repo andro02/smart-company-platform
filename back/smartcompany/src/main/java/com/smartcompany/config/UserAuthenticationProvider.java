@@ -51,7 +51,7 @@ public class UserAuthenticationProvider {
             String saltStr = salt.toString();
 
             SignUpDto signUpDto = new SignUpDto("admin", saltStr.toCharArray(), UserType.SuperAdmin, false, "admin@gmail.com", "profile.jpg", null);
-            userService.register(signUpDto);
+            userService.registerSuperAdmin(signUpDto);
 
             try {
                 String filename = "superadmin.txt";

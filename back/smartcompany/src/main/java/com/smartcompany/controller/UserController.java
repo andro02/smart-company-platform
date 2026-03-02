@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.smartcompany.config.UserAuthenticationProvider;
+import com.smartcompany.dto.ChangePasswordDto;
 import com.smartcompany.dto.CredentialsDto;
 import com.smartcompany.dto.SignUpDto;
 import com.smartcompany.dto.UserDto;
@@ -60,6 +61,17 @@ public class UserController {
         createdUser.setToken(userAuthenticationProvider.createToken(createdUser));
         return ResponseEntity.created(URI.create("/api/users/" + createdUser.getUsername())).body(createdUser);
     }
+
+	@PostMapping("/register/manager")
+    public ResponseEntity<UserDto> registerManager(@RequestBody @Valid SignUpDto user) {
+        UserDto createdUser;
+		try {
+			createdUser = userService.registerManager(user);
+		} catch (Exception e) {
+			return new ResponseEntity<UserDto>(HttpStatus.BAD_REQUEST);
+		}
+        return ResponseEntity.created(URI.create("/api/users/" + createdUser.getUsername())).body(createdUser);
+    }
 	
 	@PutMapping(value = "/account/{username}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<UserDto> update(@RequestBody SignUpDto signUpDto, @PathVariable String username)
@@ -67,6 +79,12 @@ public class UserController {
 		UserDto updatedUser = userService.update(signUpDto, username);
 		updatedUser.setToken(userAuthenticationProvider.createToken(updatedUser));
 		return ResponseEntity.ok(updatedUser);
+	}
+
+	@PutMapping("/account/change-password")
+	public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordDto dto) {
+		userService.changePassword(dto);
+		return ResponseEntity.ok().build();
 	}
 	
 	// @DeleteMapping(value = "/account/{username}")
