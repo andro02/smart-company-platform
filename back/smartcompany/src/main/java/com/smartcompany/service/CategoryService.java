@@ -1,0 +1,63 @@
+package com.smartcompany.service;
+
+import com.smartcompany.dto.CategoryDto;
+import com.smartcompany.dto.CategoryRequestDto;
+import com.smartcompany.exception.AppException;
+import com.smartcompany.model.Category;
+import com.smartcompany.repository.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class CategoryService {
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    public List<CategoryDto> getAll() {
+        return categoryRepository.findAll()
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public CategoryDto getById(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException("Category not found", HttpStatus.NOT_FOUND));
+        return toDto(category);
+    }
+
+    public CategoryDto create(CategoryRequestDto dto) {
+        if (categoryRepository.existsByName(dto.name())) {
+            throw new AppException("Category with that name already exists", HttpStatus.BAD_REQUEST);
+        }
+        Category category = new Category(null, dto.name(), dto.description());
+        return toDto(categoryRepository.save(category));
+    }
+
+    public CategoryDto update(Long id, CategoryRequestDto dto) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new AppException("Category not found", HttpStatus.NOT_FOUND));
+        category.setName(dto.name());
+        category.setDescription(dto.description());
+        return toDto(categoryRepository.save(category));
+    }
+
+    public void delete(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new AppException("Category not found", HttpStatus.NOT_FOUND);
+        }
+        categoryRepository.deleteById(id);
+    }
+
+    public CategoryDto toDto(Category category) {
+        return new CategoryDto(category.getId(), category.getName(), category.getDescription());
+    }
+
+    public Category toEntity(CategoryDto dto) {
+        return new Category(dto.getId(), dto.getName(), dto.getDescription());
+    }
+}
