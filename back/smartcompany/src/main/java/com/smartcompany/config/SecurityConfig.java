@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -13,6 +14,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity 
 public class SecurityConfig {
 	
 	@Autowired
@@ -36,6 +38,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/files/presigned-url/get").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/files/presigned-url/put").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/account/change-password").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/products").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/categories").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                     // .requestMatchers(HttpMethod.GET, "/users/*").permitAll()
                     // .requestMatchers(HttpMethod.GET, "/api/accommodations").permitAll()
                     // .requestMatchers(HttpMethod.GET, "/api/accommodations/*").permitAll()
