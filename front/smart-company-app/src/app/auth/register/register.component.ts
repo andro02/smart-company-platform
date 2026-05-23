@@ -97,7 +97,7 @@ export class RegisterComponent {
 
     const data = this.registerForm.value;
 
-    this.fileService.uploadFile(this.selectedFile.name, data.username)
+    this.fileService.getUploadUrl(this.selectedFile.name, 'profile-images')
       .subscribe({
         next: (response) => {
 
@@ -108,7 +108,7 @@ export class RegisterComponent {
           };
 
           // Upload fajla na S3
-          this.http.put(res.url, this.selectedFile, { headers })
+          this.fileService.uploadToS3(res.url, this.selectedFile!)
             .subscribe({
               next: () => {
 

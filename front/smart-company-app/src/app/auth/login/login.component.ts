@@ -46,13 +46,19 @@ export class LoginComponent {
     ).then(response => {
       this.axiosService.setAuthToken(response.data.token);
       const role = this.axiosService.getRole();
+      const isActive = this.axiosService.getIsActive();
+
+      if (!isActive) {
+        this.router.navigate(['change-password']);
+        return;
+      }
 
       switch (role) {
         case 'SuperAdmin':
           this.router.navigate(['register-manager']);
           break;
         case 'Manager':
-          this.router.navigate(['']);
+          this.router.navigate(['products']);
           break
         case 'Guest':
           this.router.navigate(['']);

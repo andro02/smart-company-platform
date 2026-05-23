@@ -18,6 +18,7 @@ import com.smartcompany.dto.ChangePasswordDto;
 import com.smartcompany.dto.CredentialsDto;
 import com.smartcompany.dto.SignUpDto;
 import com.smartcompany.dto.UserDto;
+import com.smartcompany.exception.AppException;
 import com.smartcompany.service.UserService;
 
 import jakarta.validation.Valid;
@@ -67,9 +68,12 @@ public class UserController {
         UserDto createdUser;
 		try {
 			createdUser = userService.registerManager(user);
+		} catch (AppException e) {
+			throw e; // AppException ide u RestExceptionHandler koji vraća pravi message
 		} catch (Exception e) {
-			return new ResponseEntity<UserDto>(HttpStatus.BAD_REQUEST);
-		}
+			e.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    	}
         return ResponseEntity.created(URI.create("/api/users/" + createdUser.getUsername())).body(createdUser);
     }
 	
@@ -82,9 +86,11 @@ public class UserController {
 	}
 
 	@PutMapping("/account/change-password")
-	public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordDto dto) {
-		userService.changePassword(dto);
-		return ResponseEntity.ok().build();
+	public ResponseEntity<UserDto> changePassword(@Valid @RequestBody ChangePasswordDto dto) {
+		UserDto updatedUser = userService.changePasswordAndReturn(dto);
+		String newToken = userAuthenticationProvider.createToken(updatedUser);
+		updatedUser.setToken(newToken);
+		return ResponseEntity.ok(updatedUser);
 	}
 	
 	// @DeleteMapping(value = "/account/{username}")

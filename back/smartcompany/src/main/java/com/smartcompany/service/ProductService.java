@@ -1,0 +1,103 @@
+package com.smartcompany.service;
+
+import com.smartcompany.dto.CategoryDto;
+import com.smartcompany.dto.ProductDto;
+import com.smartcompany.dto.ProductRequestDto;
+import com.smartcompany.exception.AppException;
+import com.smartcompany.model.Category;
+import com.smartcompany.model.Product;
+import com.smartcompany.repository.CategoryRepository;
+import com.smartcompany.repository.ProductRepository;
+import com.smartcompany.specification.ProductSpecification;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+
+@Service
+public class ProductService {
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    public Page<ProductDto> search(String search, Long categoryId, Boolean isForSale,
+                                    BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        Specification<Product> spec = ProductSpecification.search(search, categoryId, isForSale, minPrice, maxPrice);
+        return productRepository.findAll(spec, pageable).map(this::toDto);
+    }
+
+    public ProductDto getById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
+        return toDto(product);
+    }
+
+    @Transactional
+    public ProductDto create(ProductRequestDto dto) {
+        Category category = categoryRepository.findById(dto.categoryId())
+                .orElseThrow(() -> new AppException("Category not found", HttpStatus.NOT_FOUND));
+
+        Product product = new Product();
+        product.setName(dto.name());
+        product.setDescription(dto.description());
+        product.setPrice(dto.price());
+        product.setWeight(dto.weight());
+        product.setImage(dto.image());
+        product.setForSale(dto.isForSale());
+        product.setCategory(category);
+
+        return toDto(productRepository.save(product));
+    }
+
+    @Transactional
+    public ProductDto update(Long id, ProductRequestDto dto) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
+
+        Category category = categoryRepository.findById(dto.categoryId())
+                .orElseThrow(() -> new AppException("Category not found", HttpStatus.NOT_FOUND));
+
+        product.setName(dto.name());
+        product.setDescription(dto.description());
+        product.setPrice(dto.price());
+        product.setWeight(dto.weight());
+        product.setImage(dto.image());
+        product.setForSale(dto.isForSale());
+        product.setCategory(category);
+
+        return toDto(productRepository.save(product));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        if (!productRepository.existsById(id)) {
+            throw new AppException("Product not found", HttpStatus.NOT_FOUND);
+        }
+        productRepository.deleteById(id);
+    }
+
+    public ProductDto toDto(Product product) {
+        CategoryDto categoryDto = categoryService.toDto(product.getCategory());
+        return new ProductDto(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getWeight(),
+                product.getImage(),
+                product.isForSale(),
+                categoryDto
+        );
+    }
+}
