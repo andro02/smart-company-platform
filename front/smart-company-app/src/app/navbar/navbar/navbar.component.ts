@@ -3,12 +3,13 @@ import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/ro
 import { AxiosService } from '../../auth/axios.service';
 import { CommonModule } from '@angular/common';
 import { SuperadminNavbarComponent } from '../superadmin-navbar/superadmin-navbar.component';
+import { ManagerNavbarComponent } from '../manager-navbar/manager-navbar.component';
 import { FileService } from '../../file.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterModule, CommonModule, SuperadminNavbarComponent],
+  imports: [RouterModule, CommonModule, SuperadminNavbarComponent, ManagerNavbarComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
@@ -17,34 +18,24 @@ export class NavbarComponent implements OnInit {
   preSignedUrl: string | null = null;
 
   constructor(public axios: AxiosService, private router: Router, public fileService: FileService, private route: ActivatedRoute) {
-
     this.fetchImage();
-
   }
 
   ngOnInit(): void {
-
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         this.fetchImage();
       }
     });
-
   }
 
   fetchImage(): void {
-
     if (this.axios.getUser() != null) {
-      this.fileService.downloadFile(this.axios.getUser()!.image).subscribe({
-        next: (response) => {
-          this.preSignedUrl = response;
-        },
-        error: (err) => {
-          console.log(err);
-        }
+      this.fileService.getDownloadUrl(this.axios.getUser()!.image).subscribe({
+        next: (response: string) => { this.preSignedUrl = response; },
+        error: (err: any) => { console.log(err); }
       });
     }
-
   }
 
   logOut(): void {
@@ -52,5 +43,4 @@ export class NavbarComponent implements OnInit {
     this.router.navigate(['login']);
     this.preSignedUrl = null;
   }
-
 }
