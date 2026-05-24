@@ -13,7 +13,6 @@ export class AxiosService {
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
-
     axios.defaults.baseURL = 'http://localhost:8080';
     axios.defaults.headers.post['Content-Type'] = 'application/json';
   }
@@ -25,7 +24,6 @@ export class AxiosService {
 
   setAuthToken(token: string | null): void {
     if (!this.isBrowser) return;
-
     if (token) {
       localStorage.setItem('auth_token', token);
     } else {
@@ -39,7 +37,6 @@ export class AxiosService {
 
     const helper = new JwtHelperService();
     const decodedToken: any = helper.decodeToken(token);
-
     if (!decodedToken) return null;
 
     return new User(
@@ -47,6 +44,7 @@ export class AxiosService {
       '',
       decodedToken['type'] as UserType,
       decodedToken['isActive'] === 'true',
+      decodedToken['mustChangePassword'] === 'true',
       decodedToken['email'],
       decodedToken['image']
     );
@@ -64,18 +62,15 @@ export class AxiosService {
     return this.getUser()?.isActive ?? false;
   }
 
+  getMustChangePassword(): boolean {
+    return this.getUser()?.mustChangePassword ?? false;
+  }
+
   request(method: string, url: string, data: any): Promise<any> {
     let headers: any = {};
-
     if (this.getAuthToken() !== null) {
-        headers = {"Authorization": "Bearer " + this.getAuthToken()};
+      headers = { "Authorization": "Bearer " + this.getAuthToken() };
     }
-
-    return axios({
-      method: method as Method,
-      url: url,
-      data: data,
-      headers: headers
-    });
+    return axios({ method: method as Method, url, data, headers });
   }
 }

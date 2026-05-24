@@ -4,7 +4,6 @@ import { RouterLink, Router } from '@angular/router';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AxiosService } from '../axios.service';
 import { Credentials } from '../model/credentials';
-import { error } from 'console';
 
 @Component({
   selector: 'app-login',
@@ -16,63 +15,48 @@ import { error } from 'console';
 export class LoginComponent {
 
   loginForm: FormGroup;
+  errorMessage: string = '';
 
   constructor(private formBuilder: FormBuilder, private axiosService: AxiosService, private router: Router) {
-
     this.loginForm = this.formBuilder.group({
-      username: ["", Validators.compose([Validators.required, Validators.minLength(5)])],
-      password: ["", Validators.compose([Validators.required, Validators.minLength(5)])]
+      username: ['', Validators.required],
+      password: ['', Validators.required]
     });
-
   }
 
   onSubmit(): void {
-
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
     }
+    this.errorMessage = '';
 
     const loginData = this.loginForm.value;
-    const credentials = new Credentials(
-      loginData.username,
-      loginData.password
-    );
+    const credentials = new Credentials(loginData.username, loginData.password);
 
-    this.axiosService.request(
-      "POST",
-      "/login",
-      credentials
-    ).then(response => {
-      this.axiosService.setAuthToken(response.data.token);
-      const role = this.axiosService.getRole();
-      const isActive = this.axiosService.getIsActive();
+    this.axiosService.request('POST', '/login', credentials)
+      .then(response => {
+        this.axiosService.setAuthToken(response.data.token);
+        const mustChangePassword = this.axiosService.getMustChangePassword();
 
-      if (!isActive) {
-        this.router.navigate(['change-password']);
-        return;
-      }
+        if (mustChangePassword) {
+          this.router.navigate(['change-password']);
+          return;
+        }
 
-      switch (role) {
-        case 'SuperAdmin':
-          this.router.navigate(['register-manager']);
-          break;
-        case 'Manager':
-          this.router.navigate(['products']);
-          break
-        case 'Guest':
-          this.router.navigate(['']);
-          break
-        case 'Customer':
-          this.router.navigate(['']);
-          break;
-      }
-    }).catch(error => {
-
-      console.log("Login failed:", error);
-      this.axiosService.setAuthToken(null);
-
-    });
-    
+        const role = this.axiosService.getRole();
+        switch (role) {
+          case 'SuperAdmin':
+          case 'Manager':
+            this.router.navigate(['products']);
+            break;
+          default:
+            this.router.navigate(['products']);
+        }
+      })
+      .catch(error => {
+        this.axiosService.setAuthToken(null);
+        this.errorMessage = error?.response?.data?.message || 'Pogrešno korisničko ime ili lozinka.';
+      });
   }
 }
