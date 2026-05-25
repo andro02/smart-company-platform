@@ -11,6 +11,7 @@ export class User {
     public password: string;
     public type: UserType;
     public isActive: boolean;
+    public mustChangePassword: boolean;
     public email: string;
     public image: string;
 
@@ -19,6 +20,7 @@ export class User {
         password: string,
         type: UserType,
         isActive: boolean,
+        mustChangePassword: boolean,
         email: string,
         image: string
     ) {
@@ -26,15 +28,8 @@ export class User {
         this.password = password;
         this.type = type;
         this.isActive = isActive;
+        this.mustChangePassword = mustChangePassword;
         this.email = email;
         this.image = image;
     }
-
-}
-
-export const UserTypeMapping: Record<UserType, string> = {
-    [UserType.Manager]: "Manager",
-    [UserType.Guest]: "Guest",
-    [UserType.Customer]: "Customer",
-    [UserType.SuperAdmin]: "SuperAdmin",
 }

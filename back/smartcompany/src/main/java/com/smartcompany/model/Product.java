@@ -8,7 +8,15 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "product")
+@Table(
+    name = "product",
+    indexes = {
+        @Index(name = "idx_product_category", columnList = "category_id"),
+        @Index(name = "idx_product_is_for_sale", columnList = "isForSale"),
+        @Index(name = "idx_product_price", columnList = "price"),
+        @Index(name = "idx_product_category_sale", columnList = "category_id, isForSale")
+    }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -27,11 +35,9 @@ public class Product {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    // Weight in kilograms
     @Column(nullable = false)
     private Double weight;
 
-    // S3 key or URL of the product image
     @Column
     private String image;
 

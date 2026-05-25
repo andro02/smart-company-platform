@@ -14,12 +14,12 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity 
+@EnableMethodSecurity
 public class SecurityConfig {
-	
-	@Autowired
-	private UserAuthenticationEntryPoint userAuthenticationEntryPoint;
-	@Autowired
+
+    @Autowired
+    private UserAuthenticationEntryPoint userAuthenticationEntryPoint;
+    @Autowired
     private UserAuthenticationProvider userAuthenticationProvider;
 
     @Bean
@@ -29,26 +29,32 @@ public class SecurityConfig {
             .addFilterBefore(new JwtAuthFilter(userAuthenticationProvider), BasicAuthenticationFilter.class)
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests((requests) -> requests
+            .authorizeHttpRequests(requests -> requests
+                    // Swagger
+                    .requestMatchers("/swagger-ui/**", "/swagger-ui", "/api-docs/**", "/api-docs").permitAll()
+                    // Auth
                     .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/register").permitAll()
                     .requestMatchers(HttpMethod.POST, "/register/customer").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/register/manager").hasRole("SuperAdmin")
-                    // .requestMatchers(HttpMethod.POST, "api/files/upload").permitAll()
+                    // Aktivacija
+                    .requestMatchers(HttpMethod.GET, "/activate/**").permitAll()
+                    // Fajlovi
                     .requestMatchers(HttpMethod.GET, "/api/files/presigned-url/get").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/files/presigned-url/put").permitAll()
-                    .requestMatchers(HttpMethod.PUT, "/api/account/change-password").permitAll()
+                    // Promena lozinke — dozvoli svima koji imaju validan token
+                    .requestMatchers(HttpMethod.PUT, "/account/change-password").authenticated()
+                    // Proizvodi i kategorije — javno čitanje
                     .requestMatchers(HttpMethod.GET, "/products").permitAll()
                     .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/categories").permitAll()
                     .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-                    // .requestMatchers(HttpMethod.GET, "/users/*").permitAll()
-                    // .requestMatchers(HttpMethod.GET, "/api/accommodations").permitAll()
-                    // .requestMatchers(HttpMethod.GET, "/api/accommodations/*").permitAll()
-                    // .requestMatchers(HttpMethod.PUT, "/api/accommodations/reservations/*").hasAuthority("ROLE_Owner")
-                    // .requestMatchers(HttpMethod.GET, "/api/ownerReviews").permitAll()
-            .anyRequest().authenticated());
+                    // Menadžeri — samo SuperAdmin (dodatno osigurano @PreAuthorize)
+                    .requestMatchers(HttpMethod.GET, "/users/managers").hasRole("SuperAdmin")
+                    .requestMatchers(HttpMethod.PUT, "/users/*/block").hasRole("SuperAdmin")
+                    .requestMatchers(HttpMethod.PUT, "/users/*/unblock").hasRole("SuperAdmin")
+                    .requestMatchers(HttpMethod.POST, "/register/manager").hasRole("SuperAdmin")
+                    // Ostalo zahteva autentifikaciju
+                    .anyRequest().authenticated()
+            );
         return http.build();
     }
-
 }

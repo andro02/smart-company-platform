@@ -27,16 +27,15 @@ import jakarta.annotation.PostConstruct;
 
 @Component
 public class UserAuthenticationProvider {
-	
-	@Value("${security.jwt.token.secret-key:secret-key}")
+
+    @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
 
-	@Autowired
+    @Autowired
     private UserService userService;
 
     @PostConstruct
     protected void init() {
-        // this is to avoid having the raw secret key available in the JVM
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
 
         List<UserDto> currentUserList = userService.getAll();
@@ -44,31 +43,33 @@ public class UserAuthenticationProvider {
             String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz";
             StringBuilder salt = new StringBuilder();
             Random rnd = new Random();
-            while (salt.length() < 15) {
+            while (salt.length() < 20) {
                 int index = (int) (rnd.nextFloat() * SALTCHARS.length());
                 salt.append(SALTCHARS.charAt(index));
             }
             String saltStr = salt.toString();
 
-            SignUpDto signUpDto = new SignUpDto("admin", saltStr.toCharArray(), UserType.SuperAdmin, false, "admin@gmail.com", "profile.jpg", null);
+            SignUpDto signUpDto = new SignUpDto(
+                    "admin", saltStr.toCharArray(), UserType.SuperAdmin,
+                    true, true,
+                    "admin@gmail.com", "profile.jpg", null);
             userService.registerSuperAdmin(signUpDto);
 
             try {
-                String filename = "superadmin.txt";
-                File file = new File(filename);
+                File file = new File("superadmin.txt");
                 file.createNewFile();
-                FileWriter myWriter = new FileWriter(filename);
+                FileWriter myWriter = new FileWriter(file);
                 myWriter.write(saltStr);
                 myWriter.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     public String createToken(UserDto user) {
         Date now = new Date();
-        Date validity = new Date(now.getTime() + 3600000); // 1 hour
+        Date validity = new Date(now.getTime() + 3600000);
 
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
         return JWT.create()
@@ -78,6 +79,7 @@ public class UserAuthenticationProvider {
                 .withClaim("email", user.getEmail())
                 .withClaim("type", user.getType().toString())
                 .withClaim("isActive", String.valueOf(user.isActive()))
+                .withClaim("mustChangePassword", String.valueOf(user.isMustChangePassword()))
                 .withClaim("image", String.valueOf(user.getImage()))
                 .withClaim("activationToken", String.valueOf(user.getActivationToken()))
                 .sign(algorithm);
@@ -85,28 +87,27 @@ public class UserAuthenticationProvider {
 
     public Authentication validateToken(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-        JWTVerifier verifier = JWT.require(algorithm)
-                .build();
-
+        JWTVerifier verifier = JWT.require(algorithm).build();
         DecodedJWT decoded = verifier.verify(token);
 
-        UserDto user = new UserDto(decoded.getSubject(), null, UserType.valueOf(decoded.getClaim("type").asString()), Boolean.valueOf(decoded.getClaim("isActive").asString()), decoded.getClaim("email").asString(), decoded.getClaim("image").asString(), decoded.getClaim("activationToken").asString());
+        UserDto user = new UserDto(
+                decoded.getSubject(), null,
+                UserType.valueOf(decoded.getClaim("type").asString()),
+                Boolean.parseBoolean(decoded.getClaim("isActive").asString()),
+                Boolean.parseBoolean(decoded.getClaim("mustChangePassword").asString()),
+                decoded.getClaim("email").asString(),
+                decoded.getClaim("image").asString(),
+                decoded.getClaim("activationToken").asString()
+        );
 
         return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
     }
 
     public Authentication validateTokenStrongly(String token) {
         Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-        JWTVerifier verifier = JWT.require(algorithm)
-                .build();
-
+        JWTVerifier verifier = JWT.require(algorithm).build();
         DecodedJWT decoded = verifier.verify(token);
-        
         UserDto user = userService.findByUsername(decoded.getSubject());
-
         return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
     }
-
 }
