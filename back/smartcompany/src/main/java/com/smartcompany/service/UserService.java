@@ -160,6 +160,16 @@ public class UserService {
         return toUserDto(savedUser);
 	}
 
+    public UserDto changePasswordAndReturn(ChangePasswordDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDto loggedUser = (UserDto) authentication.getPrincipal();
+        User user = userRepository.findByUsername(loggedUser.getUsername())
+            .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        user.setActive(true); // aktiviraj korisnika
+        return toUserDto(userRepository.save(user));
+    }
+
     public void changePassword(ChangePasswordDto dto) {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

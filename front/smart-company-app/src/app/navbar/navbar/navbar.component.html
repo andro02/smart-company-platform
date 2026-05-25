@@ -7,6 +7,12 @@
 
     <div class="collapse navbar-collapse" id="navbar">
         <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" [routerLink]="['products']">Products</a>
+            </li>
+            <app-manager-navbar
+                *ngIf="(axios.getRole() == 'Manager' || axios.getRole() == 'SuperAdmin') && axios.getIsActive() == true" class="navbar-nav">
+            </app-manager-navbar>
             <app-superadmin-navbar *ngIf="axios.getRole() == 'SuperAdmin' && axios.getIsActive() == true" class="navbar-nav"></app-superadmin-navbar>
             <!-- <app-citizen-navbar *ngIf="axios.getRole() == 'Citizen' && axios.getIsActive() == true" class="navbar-nav"></app-citizen-navbar> -->
         </ul>

@@ -1,6 +1,8 @@
 <div class="container">
     <h2 class="text-center pt-5 mt-3">Enter manager's information</h2>
     <div class="row justify-content-center align-items-center">
+        <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+        <div *ngIf="errorMessage && !fileError" class="alert alert-danger">{{ errorMessage }}</div>
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="w-75">
             <div class="form-group">
                 <label for="username">Username</label>

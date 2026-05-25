@@ -23,6 +23,8 @@ export class RegisterManagerComponent {
   fileError: boolean = false;
   errorMessage: string = '';
 
+  successMessage: string = '';
+
   formSubmitted: boolean = false;
 
   registerForm: FormGroup;
@@ -99,7 +101,7 @@ export class RegisterManagerComponent {
 
     const registerData = this.registerForm.value;
 
-    this.fileService.uploadFile(this.selectedFile.name, registerData.username)
+    this.fileService.getUploadUrl(this.selectedFile.name, 'profile-images')
       .subscribe({
         next: (response) => {
 
@@ -109,7 +111,7 @@ export class RegisterManagerComponent {
             'Content-Type': this.selectedFile!.type
           }
 
-          this.http.put(res.url, this.selectedFile, { headers })
+          this.fileService.uploadToS3(res.url, this.selectedFile!)
             .subscribe({
               next: () => {
 
@@ -122,12 +124,19 @@ export class RegisterManagerComponent {
                   res.filename
                 );
 
-                this.axios.request('POST', '/register', user)
+                console.log(user);
+
+                this.axios.request('POST', '/register/manager', user)
                   .then(res => {
-                    this.router.navigate(['register-manager']);
+                    // this.router.navigate(['register-manager']);
+                    this.successMessage = 'Manager registered successfully!';
+                    this.registerForm.reset();
+                    this.selectedFile = null;
+                    this.formSubmitted = false;
+                    this.errorMessage = '';
                   })
                   .catch(err => {
-                    console.log(err.response?.data);
+                    this.errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
                   });
 
               }

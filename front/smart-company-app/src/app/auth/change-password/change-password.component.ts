@@ -49,7 +49,7 @@ export class ChangePasswordComponent {
     ).then(response => {
 
       this.axios.setAuthToken(response.data.token);
-      this.router.navigate(['']);
+      this.router.navigate(['products']);
 
     }).catch(error => {
 
