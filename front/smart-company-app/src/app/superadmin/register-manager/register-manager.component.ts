@@ -119,7 +119,8 @@ export class RegisterManagerComponent {
                   registerData.username,
                   registerData.password,
                   UserType.Manager,
-                  false,
+                  true,   // isActive — nalog je odmah aktivan
+                  true,   // mustChangePassword — mora promeniti pri prvoj prijavi
                   registerData.email,
                   res.filename
                 );
@@ -128,15 +129,20 @@ export class RegisterManagerComponent {
 
                 this.axios.request('POST', '/register/manager', user)
                   .then(res => {
-                    // this.router.navigate(['register-manager']);
-                    this.successMessage = 'Manager registered successfully!';
                     this.registerForm.reset();
                     this.selectedFile = null;
                     this.formSubmitted = false;
                     this.errorMessage = '';
+
+                    this.router.navigate(['/managers'], {
+                      state: {
+                        successMessage: 'Manager registered successfully!'
+                      }
+                    });
                   })
                   .catch(err => {
                     this.errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+                    setTimeout(() => this.errorMessage = '', 4000);
                   });
 
               }

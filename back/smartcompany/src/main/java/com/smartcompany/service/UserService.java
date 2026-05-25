@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +22,7 @@ import com.smartcompany.exception.AppException;
 import com.smartcompany.model.User;
 import com.smartcompany.model.UserType;
 import com.smartcompany.repository.UserRepository;
-import com.smartcompany.service.UserService;
+import com.smartcompany.specification.UserSpecification;
 
 @Service
 public class UserService {
@@ -30,249 +32,184 @@ public class UserService {
     @Autowired
     private ActivationTokenService tokenService;
     @Autowired
-	private UserRepository userRepository;
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public List<UserDto> getAll() {
+        return toUserDtos(userRepository.findAll());
+    }
+
+    public Page<UserDto> getManagers(String search, Pageable pageable) {
+        return userRepository
+                .findAll(UserSpecification.searchManagers(search), pageable)
+                .map(this::toUserDto);
+    }
+
+    public UserDto login(CredentialsDto credentialsDto) {
+        User user = userRepository.findByUsername(credentialsDto.username())
+                .orElseThrow(() -> new AppException("Nepoznat korisnik", HttpStatus.NOT_FOUND));
+
+        if (!passwordEncoder.matches(CharBuffer.wrap(credentialsDto.password()), user.getPassword())) {
+            throw new AppException("Pogrešna lozinka", HttpStatus.BAD_REQUEST);
+        }
+
+        // isActive=false za menadžere/superadmin znači blokiran
+        // isActive=false za kupce znači neaktiviran nalog
+        if (!user.isActive() && user.getType() != UserType.Customer) {
+            throw new AppException("Nalog je blokiran", HttpStatus.FORBIDDEN);
+        }
+
+        if (!user.isActive() && user.getType() == UserType.Customer) {
+            throw new AppException("Nalog nije aktiviran", HttpStatus.FORBIDDEN);
+        }
+
+        return toUserDto(user);
+    }
+
+    public UserDto registerCustomer(SignUpDto userDto) {
+        if (userRepository.findByUsername(userDto.username()).isPresent()) {
+            throw new AppException("Korisničko ime već postoji", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = signUpToUser(userDto);
+        user.setType(UserType.Customer);
+        user.setActive(false);
+        user.setMustChangePassword(false);
+        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
+
+        String token = tokenService.generateActivationToken();
+        user.setActivationToken(token);
+        String activationLink = "http://localhost:4200/activate?username=" + user.getUsername() + "&token=" + token;
+        emailService.sendActivationEmail(user.getEmail(), activationLink);
+
+        return toUserDto(userRepository.save(user));
+    }
+
+    public UserDto registerManager(SignUpDto userDto) {
+        if (userRepository.findByUsername(userDto.username()).isPresent()) {
+            throw new AppException("Korisničko ime već postoji", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = signUpToUser(userDto);
+        user.setType(UserType.Manager);
+        user.setActive(true);              // odmah aktivan
+        user.setMustChangePassword(true);  // mora promeniti lozinku
+        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
+
+        return toUserDto(userRepository.save(user));
+    }
+
+    public UserDto registerSuperAdmin(SignUpDto userDto) {
+        if (userRepository.findByUsername(userDto.username()).isPresent()) {
+            throw new AppException("Korisničko ime već postoji", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = signUpToUser(userDto);
+        user.setType(UserType.SuperAdmin);
+        user.setActive(true);              // odmah aktivan
+        user.setMustChangePassword(true);  // mora promeniti lozinku
+        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
+
+        return toUserDto(userRepository.save(user));
+    }
+
+    public UserDto blockManager(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+        if (user.getType() == UserType.SuperAdmin) {
+            throw new AppException("Ne možete blokirati superadmina", HttpStatus.FORBIDDEN);
+        }
+        user.setActive(false);
+        return toUserDto(userRepository.save(user));
+    }
+
+    public UserDto unblockManager(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+        user.setActive(true);
+        return toUserDto(userRepository.save(user));
+    }
+
+    public UserDto changePasswordAndReturn(ChangePasswordDto dto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDto loggedUser = (UserDto) authentication.getPrincipal();
+        User user = userRepository.findByUsername(loggedUser.getUsername())
+                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+
+        user.setPassword(passwordEncoder.encode(dto.newPassword()));
+        user.setMustChangePassword(false);
+
+        return toUserDto(userRepository.save(user));
+    }
+
+    public UserDto update(SignUpDto signUpDto, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+
+        User updated = signUpToUser(signUpDto);
+        updated.setUsername(username);
+
+        if (signUpDto.password() == null || signUpDto.password().length == 0) {
+            updated.setPassword(user.getPassword());
+        } else {
+            updated.setPassword(passwordEncoder.encode(CharBuffer.wrap(signUpDto.password())));
+        }
+
+        userRepository.deleteById(username);
+        return toUserDto(userRepository.save(updated));
+    }
+
+    public void delete(String username) {
+        userRepository.deleteById(username);
+    }
+
+    public UserDto findByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+        return toUserDto(user);
+    }
 
     public boolean validateActivationToken(String username, String token) {
-        Optional<User> user = userRepository.findByUsername(username);
-        if (user.isPresent()) {
-            return token.equals(user.get().getActivationToken()) && !user.get().isActive();
-        }
-        return false;
+        return userRepository.findByUsername(username)
+                .map(u -> token.equals(u.getActivationToken()) && !u.isActive())
+                .orElse(false);
     }
 
     public void activateUser(String username) {
-        Optional<User> user = userRepository.findByUsername(username);
-        user.ifPresent(u -> {
+        userRepository.findByUsername(username).ifPresent(u -> {
             u.setActive(true);
             u.setActivationToken(null);
             userRepository.save(u);
         });
     }
 
-    public List<UserDto> getAll() {
-        List<User> users = userRepository.findAll();
-        return toUserDtos(users);
-    }
-	
-    public UserDto login(CredentialsDto credentialsDto) {
-        User user = userRepository.findByUsername(credentialsDto.username())
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-
-        if (passwordEncoder.matches(CharBuffer.wrap(credentialsDto.password()), user.getPassword())) {
-        	// if (user.getIsBlocked() == true) 
-            //     throw new AppException("User is blocked", HttpStatus.BAD_REQUEST);
-            return toUserDto(user);
-        }
-        throw new AppException("Invalid password", HttpStatus.BAD_REQUEST);
-    }
-    
-    public UserDto registerCustomer(SignUpDto userDto) {
-    	
-    	Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
-
-        if (optionalUser.isPresent()) {
-            throw new AppException("Username already exists", HttpStatus.BAD_REQUEST);
-        }
-        
-        User user = signUpToUser(userDto);
-        user.setType(UserType.Customer);
-        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
-
-        if (!user.isActive() && !user.getType().equals(UserType.SuperAdmin)) {
-            String baseUrl = "http://localhost:4200";
-            String token = tokenService.generateActivationToken();
-    
-            user.setActivationToken(token);
-            String activationLink = baseUrl + "/activate?username=" + user.getUsername() + "&token=" + token;
-
-            emailService.sendActivationEmail(user.getEmail(), activationLink);
-        }
-
-        User savedUser = userRepository.save(user);
-
-        return toUserDto(savedUser);
-    }
-
-    public UserDto registerManager(SignUpDto userDto) {
-    	
-    	Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
-
-        if (optionalUser.isPresent()) {
-            throw new AppException("Username already exists", HttpStatus.BAD_REQUEST);
-        }
-        
-        User user = signUpToUser(userDto);
-        user.setActive(false);
-        user.setType(UserType.Manager);
-        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
-
-        // if (!user.isActive() && (!user.getType().equals(UserType.SuperAdmin) || !user.getType().equals(UserType.Manager))) {
-        //     String baseUrl = "http://localhost:4200";
-        //     String token = tokenService.generateActivationToken();
-    
-        //     user.setActivationToken(token);
-        //     String activationLink = baseUrl + "/activate?username=" + user.getUsername() + "&token=" + token;
-
-        //     emailService.sendActivationEmail(user.getEmail(), activationLink);
-        // }
-
-        User savedUser = userRepository.save(user);
-
-        return toUserDto(savedUser);
-    }
-
-    public UserDto registerSuperAdmin(SignUpDto userDto) {
-    	
-    	Optional<User> optionalUser = userRepository.findByUsername(userDto.username());
-
-        if (optionalUser.isPresent()) {
-            throw new AppException("Username already exists", HttpStatus.BAD_REQUEST);
-        }
-        
-        User user = signUpToUser(userDto);
-        user.setType(UserType.SuperAdmin);
-        user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
-
-        User savedUser = userRepository.save(user);
-
-        return toUserDto(savedUser);
-    }
-
-	public UserDto update(SignUpDto signUpDto, String username) throws Exception {
-		User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-		
-		User updatedUser = new User(signUpDto.username(), "", signUpDto.type(), signUpDto.isActive(), signUpDto.email(), signUpDto.image(), signUpDto.activationToken());
-
-		if (signUpDto.password().length == 0) {
-			updatedUser.setPassword(user.getPassword());
-		}
-		else {
-			updatedUser.setPassword(passwordEncoder.encode(CharBuffer.wrap(signUpDto.password())));
-		}
-
-		delete(username);
-
-        User savedUser = userRepository.save(updatedUser);
-
-        return toUserDto(savedUser);
-	}
-
-    public UserDto changePasswordAndReturn(ChangePasswordDto dto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDto loggedUser = (UserDto) authentication.getPrincipal();
-        User user = userRepository.findByUsername(loggedUser.getUsername())
-            .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-        user.setPassword(passwordEncoder.encode(dto.newPassword()));
-        user.setActive(true); // aktiviraj korisnika
-        return toUserDto(userRepository.save(user));
-    }
-
-    public void changePassword(ChangePasswordDto dto) {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        UserDto loggedUser = (UserDto) authentication.getPrincipal();
-
-        User user = userRepository.findByUsername(loggedUser.getUsername())
-            .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
-
-        user.setPassword(passwordEncoder.encode(dto.newPassword()));
-
-        userRepository.save(user);
-    }
-	
-	public void delete(String username) {
-		userRepository.deleteById(username);
-	}
-    
-	public UserDto findByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
-        
-        return toUserDto(user);
-    }
-	
-    public User toUser(UserDto userDto) {
-        if (userDto == null) {
-            return null;
-        }
-
-        User user = new User();
-
-        user.setUsername( userDto.getUsername() );
-    	user.setType(userDto.getType());
-    	user.setActive(userDto.isActive());
-    	user.setEmail( userDto.getEmail());
-    	user.setImage( userDto.getImage());
-    	user.setActivationToken( userDto.getActivationToken());
-
-        return user;
-    }
-
     public UserDto toUserDto(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        String username = null;
-
-        username = user.getUsername();
-        String password = user.getPassword();
-        UserType type = user.getType();
-        boolean isActive = user.isActive();
-        String email = user.getEmail();
-        String image = user.getImage();
-        String activationToken = user.getActivationToken();
-
-        UserDto userDto = new UserDto(username, password, type, isActive, email, image, activationToken);
-
-        return userDto;
+        if (user == null) return null;
+        return new UserDto(
+                user.getUsername(), null, user.getType(),
+                user.isActive(), user.isMustChangePassword(),
+                user.getEmail(), user.getImage(), user.getActivationToken()
+        );
     }
 
     public List<UserDto> toUserDtos(List<User> users) {
-        if ( users == null ) {
-            return null;
-        }
-
-        List<UserDto> list = new ArrayList<UserDto>( users.size() );
-        for ( User user : users ) {
-            list.add( toUserDto( user ) );
-        }
-
+        if (users == null) return null;
+        List<UserDto> list = new ArrayList<>(users.size());
+        for (User u : users) list.add(toUserDto(u));
         return list;
     }
 
-    public void updateUser(User target, User source) {
-        if ( source == null ) {
-            return;
-        }
-
-        target.setUsername( source.getUsername() );
-        target.setPassword( source.getPassword());
-        target.setType( source.getType());
-        target.setActive( source.isActive());
-        target.setEmail( source.getEmail() );
-        target.setImage( source.getImage() );
-        target.setActivationToken( source.getActivationToken() );
-    }
-    
-    public User signUpToUser(SignUpDto signUpDto) {
-    	if (signUpDto == null) {
-            return null;
-        }
-
+    public User signUpToUser(SignUpDto dto) {
+        if (dto == null) return null;
         User user = new User();
-
-        user.setUsername( signUpDto.username() );
-    	user.setType(signUpDto.type());
-        user.setActive(signUpDto.isActive());
-    	user.setEmail( signUpDto.email());
-    	user.setImage( signUpDto.image());
-    	user.setActivationToken( signUpDto.activationToken());
-
+        user.setUsername(dto.username());
+        user.setType(dto.type());
+        user.setActive(dto.isActive());
+        user.setMustChangePassword(dto.mustChangePassword());
+        user.setEmail(dto.email());
+        user.setImage(dto.image());
+        user.setActivationToken(dto.activationToken());
         return user;
     }
-    
 }
