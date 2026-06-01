@@ -119,8 +119,8 @@ export class RegisterManagerComponent {
                   registerData.username,
                   registerData.password,
                   UserType.Manager,
-                  true,   // isActive — nalog je odmah aktivan
-                  true,   // mustChangePassword — mora promeniti pri prvoj prijavi
+                  true,   // isActive nalog je odmah aktivan
+                  true,   // mustChangePassword mora promeniti pri prvoj prijavi
                   registerData.email,
                   res.filename
                 );

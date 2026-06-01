@@ -8,10 +8,12 @@ import { ActivationComponent } from './auth/activation/activation.component';
 import { ProductListComponent } from './product/product-list/product-list.component';
 import { ProductFormComponent } from './product/product-form/product-form.component';
 import { ChangePasswordComponent } from './auth/change-password/change-password.component';
+import { FactoryListComponent } from './factory/factory-list/factory-list.component';
+import { FactoryFormComponent } from './factory/factory-form/factory-form.component';
+import { FactoryDetailComponent } from './factory/factory-detail/factory-detail.component';
 import { authGuard, mustChangePasswordGuard } from './common/guards/auth.guard';
 
 export const routes: Routes = [
-  // Home — redirect na products ili login u zavisnosti od toga da li je ulogovan
   { path: '',                   component: HomeComponent },
 
   // Javne rute
@@ -19,16 +21,22 @@ export const routes: Routes = [
   { path: 'register',           component: RegisterComponent },
   { path: 'activate',           component: ActivationComponent },
 
-  // Promena lozinke — dostupno samo ako mustChangePassword=true
   { path: 'change-password',    component: ChangePasswordComponent, canActivate: [mustChangePasswordGuard] },
 
-  // Zaštićene rute
+  // Proizvodi
   { path: 'products',           component: ProductListComponent,     canActivate: [authGuard] },
   { path: 'products/new',       component: ProductFormComponent,     canActivate: [authGuard] },
   { path: 'products/edit/:id',  component: ProductFormComponent,     canActivate: [authGuard] },
+
+  // Menadžeri
   { path: 'register-manager',   component: RegisterManagerComponent, canActivate: [authGuard] },
   { path: 'managers',           component: ManagerListComponent,     canActivate: [authGuard] },
 
-  // Sve ostalo — redirect na home
+  // Fabrike
+  { path: 'factories',          component: FactoryListComponent,     canActivate: [authGuard] },
+  { path: 'factories/new',      component: FactoryFormComponent,     canActivate: [authGuard] },
+  { path: 'factories/edit/:id', component: FactoryFormComponent,     canActivate: [authGuard] },
+  { path: 'factories/:id',      component: FactoryDetailComponent,   canActivate: [authGuard] },
+
   { path: '**',                 redirectTo: '' }
 ];

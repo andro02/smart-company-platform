@@ -28,11 +28,13 @@ import com.smartcompany.exception.AppException;
 import com.smartcompany.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @Tag(name = "Users", description = "Upravljanje korisnicima")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     @Autowired
@@ -100,7 +102,7 @@ public class UserController {
         return ResponseEntity.created(URI.create("/api/users/" + createdUser.getUsername())).body(createdUser);
     }
 
-    @Operation(summary = "Registracija menadžera — samo SuperAdmin")
+    @Operation(summary = "Registracija menadžera, samo SuperAdmin")
     @PostMapping("/register/manager")
     @PreAuthorize("hasRole('SuperAdmin')")
     public ResponseEntity<UserDto> registerManager(@RequestBody @Valid SignUpDto user) {

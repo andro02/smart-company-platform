@@ -1,0 +1,10 @@
+.factory-card-img-wrapper {
+  height: 180px;
+  overflow: hidden;
+}
+
+.factory-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
