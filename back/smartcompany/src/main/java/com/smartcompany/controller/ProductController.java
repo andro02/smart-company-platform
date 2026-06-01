@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import java.math.BigDecimal;
 @RestController
 @RequestMapping("/products")
 @Tag(name = "Products", description = "Product management and search")
+@SecurityRequirement(name = "bearerAuth")
 public class ProductController {
 
     @Autowired
@@ -34,7 +36,7 @@ public class ProductController {
      * GET /products?search=...&categoryId=...&isForSale=...&page=0&size=20&sort=name,asc
      *
      * All query params are optional.
-     * Returns a paginated result — mirrors the webshop-style search from spec 5.2.
+     * Returns a paginated result mirrors the webshop-style search from spec 5.2.
      */
     @Operation(
         summary = "Search and filter products",

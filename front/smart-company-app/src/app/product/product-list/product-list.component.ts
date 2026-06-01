@@ -53,7 +53,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.loadCategories();
     this.loadProducts();
 
-    // Debounce search input — čeka 400ms nakon što korisnik prestane da kuca
+    // Debounce search input čeka 400ms nakon što korisnik prestane da kuca
     this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged()

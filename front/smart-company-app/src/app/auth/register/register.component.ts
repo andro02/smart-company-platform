@@ -116,7 +116,7 @@ export class RegisterComponent {
                   data.username,
                   data.password,
                   UserType.Customer,
-                  false,   // isActive — aktivira se emailom
+                  false,   // isActive aktivira se emailom
                   false,   // mustChangePassword
                   data.email,
                   res.filename
