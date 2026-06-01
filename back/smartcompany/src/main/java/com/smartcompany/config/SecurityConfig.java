@@ -40,14 +40,14 @@ public class SecurityConfig {
                     // Fajlovi
                     .requestMatchers(HttpMethod.GET, "/api/files/presigned-url/get").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/files/presigned-url/put").permitAll()
-                    // Promena lozinke — dozvoli svima koji imaju validan token
+                    // Promena lozinke dozvoli svima koji imaju validan token
                     .requestMatchers(HttpMethod.PUT, "/account/change-password").authenticated()
-                    // Proizvodi i kategorije — javno čitanje
+                    // Proizvodi i kategorije javno citanje
                     .requestMatchers(HttpMethod.GET, "/products").permitAll()
                     .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/categories").permitAll()
                     .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
-                    // Menadžeri — samo SuperAdmin (dodatno osigurano @PreAuthorize)
+                    // Menadzeri samo SuperAdmin (dodatno osigurano @PreAuthorize)
                     .requestMatchers(HttpMethod.GET, "/users/managers").hasRole("SuperAdmin")
                     .requestMatchers(HttpMethod.PUT, "/users/*/block").hasRole("SuperAdmin")
                     .requestMatchers(HttpMethod.PUT, "/users/*/unblock").hasRole("SuperAdmin")

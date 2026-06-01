@@ -17,7 +17,7 @@ public class UserSpecification {
             // Uvek filtriramo samo menadžere
             predicates.add(cb.equal(root.get("type"), UserType.Manager));
 
-            // Pretraga po početku username-a — koristi B-tree indeks
+            // Pretraga po pocetku username-a koristi B-tree indeks
             if (search != null && !search.isBlank()) {
                 predicates.add(cb.like(
                     cb.lower(root.get("username")),

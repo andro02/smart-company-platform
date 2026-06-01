@@ -12,7 +12,7 @@ export const authGuard: CanActivateFn = () => {
     return false;
   }
 
-  // Mora promeniti lozinku — blokira pristup svemu osim /change-password
+  // Mora promeniti lozinku blokira pristup svemu osim /change-password
   if (axios.getMustChangePassword()) {
     router.navigate(['change-password']);
     return false;

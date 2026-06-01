@@ -1,0 +1,73 @@
+package com.smartcompany.service;
+
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.WriteApiBlocking;
+import com.influxdb.client.domain.WritePrecision;
+import com.influxdb.client.write.Point;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+
+@Service
+public class InfluxDBService {
+
+    @Autowired
+    private InfluxDBClient influxDBClient;
+
+    @Value("${influxdb.bucket}")
+    private String bucket;
+
+    @Value("${influxdb.org}")
+    private String org;
+
+    /**
+     * Beleži heartbeat/status događaj fabrike.
+     * measurement: factory_status
+     * tags: factory_id
+     * fields: online (1 = online, 0 = offline)
+     */
+    public void writeHeartbeat(Long factoryId, boolean online, Instant timestamp) {
+        try {
+            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
+            Point point = Point
+                    .measurement("factory_status")
+                    .addTag("factory_id", String.valueOf(factoryId))
+                    .addField("online", online ? 1 : 0)
+                    .time(timestamp, WritePrecision.MS);
+            writeApi.writePoint(bucket, org, point);
+        } catch (Exception e) {
+            // Log, ne pucaj celu aplikaciju zbog InfluxDB greške
+            System.err.println("[InfluxDB] Failed to write heartbeat for factory " + factoryId + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Beleži podatke o proizvodnji.
+     * measurement: factory_production
+     * tags: factory_id, product_id
+     * fields: quantity
+     */
+    public void writeProduction(Long factoryId, Long productId, int quantity, Instant timestamp) {
+        try {
+            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
+            Point point = Point
+                    .measurement("factory_production")
+                    .addTag("factory_id", String.valueOf(factoryId))
+                    .addTag("product_id", String.valueOf(productId))
+                    .addField("quantity", quantity)
+                    .time(timestamp, WritePrecision.MS);
+            writeApi.writePoint(bucket, org, point);
+        } catch (Exception e) {
+            System.err.println("[InfluxDB] Failed to write production for factory " + factoryId + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Beleži kada fabrika prelazi u offline stanje (heartbeat checker).
+     */
+    public void writeOfflineEvent(Long factoryId) {
+        writeHeartbeat(factoryId, false, Instant.now());
+    }
+}
