@@ -11,44 +11,31 @@
   <!-- Filteri -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
-      <div class="row g-3 align-items-end">
+      <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
 
-        <!-- Search -->
-        <div class="col-md-3">
-          <input type="text" class="form-control" placeholder="Search by name..."
-                 [(ngModel)]="searchText" (input)="onSearchInput()">
-        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <input type="text" class="form-control filter-input" placeholder="🔍  Search by name..."
+                [(ngModel)]="searchText" (input)="onSearchInput()">
 
-        <!-- Country -->
-        <div class="col-md-3">
-          <select class="form-select" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
+          <select class="form-select filter-select" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
             <option [ngValue]="null">All countries</option>
             <option *ngFor="let c of countries" [ngValue]="c.id">{{ c.name }}</option>
           </select>
-        </div>
 
-        <!-- City -->
-        <div class="col-md-2">
-          <select class="form-select" [(ngModel)]="selectedCityId" (change)="onFilterChange()"
+          <select class="form-select filter-select" [(ngModel)]="selectedCityId" (change)="onFilterChange()"
                   [disabled]="!selectedCountryId">
             <option [ngValue]="null">All cities</option>
             <option *ngFor="let c of cities" [ngValue]="c.id">{{ c.name }}</option>
           </select>
-        </div>
 
-        <!-- Online status -->
-        <div class="col-md-2">
-          <select class="form-select" [(ngModel)]="isOnline" (change)="onFilterChange()">
+          <select class="form-select filter-select filter-select--short" [(ngModel)]="isOnline" (change)="onFilterChange()">
             <option [ngValue]="null">All statuses</option>
-            <option [ngValue]="true">Online</option>
-            <option [ngValue]="false">Offline</option>
+            <option [ngValue]="true">🟢 Online</option>
+            <option [ngValue]="false">⚫ Offline</option>
           </select>
         </div>
 
-        <!-- Reset -->
-        <div class="col-md-2">
-          <button class="btn btn-outline-secondary w-100" (click)="resetFilters()">Reset</button>
-        </div>
+        <button class="btn btn-sm btn-outline-danger" (click)="resetFilters()">✕ Reset</button>
 
       </div>
     </div>
@@ -129,13 +116,18 @@
 
   <!-- Paginacija -->
   <nav *ngIf="totalPages > 1" class="mt-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center flex-wrap">
       <li class="page-item" [class.disabled]="currentPage === 0">
         <button class="page-link" (click)="goToPage(currentPage - 1)">«</button>
       </li>
-      <li *ngFor="let p of getPages()" class="page-item" [class.active]="p === currentPage">
-        <button class="page-link" (click)="goToPage(p)">{{ p + 1 }}</button>
-      </li>
+      <ng-container *ngFor="let p of getPages()">
+        <li *ngIf="p.toString() === '...'" class="page-item disabled">
+          <span class="page-link">…</span>
+        </li>
+        <li *ngIf="p.toString() !== '...'" class="page-item" [class.active]="p === currentPage">
+          <button class="page-link" (click)="goToPage(+p)">{{ +p + 1 }}</button>
+        </li>
+      </ng-container>
       <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
         <button class="page-link" (click)="goToPage(currentPage + 1)">»</button>
       </li>

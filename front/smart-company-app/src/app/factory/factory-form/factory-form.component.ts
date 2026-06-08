@@ -69,20 +69,15 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.map) this.map.remove();
   }
 
+  private mapReady = false;
+  private L: any = null;
+
   async initMap(): Promise<void> {
     const L = await import('leaflet');
-
-    const iconDefault = L.icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41]
-    });
-    L.Marker.prototype.options.icon = iconDefault;
+    this.L = L;
+    // ... isti kod za icon i tileLayer ...
 
     this.map = L.map('factory-map').setView([48.0, 15.0], 4);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
@@ -93,24 +88,24 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
       this.setMarker(L, e.latlng.lat, e.latlng.lng);
     });
 
-    if (this.latitude && this.longitude) {
-      this.map.setView([this.latitude, this.longitude], 8);
-      this.setMarker(L, this.latitude, this.longitude);
-    }
+    this.mapReady = true;
 
-    if (this.pendingCoords) {
-      this.map.setView([this.pendingCoords.lat, this.pendingCoords.lng], 10);
-      this.setMarker(L, this.pendingCoords.lat, this.pendingCoords.lng);
-      this.pendingCoords = null;
+    // Ako su koordinate već učitane pre mape
+    if (this.latitude && this.longitude) {
+      this.focusMap(this.latitude, this.longitude);
     }
+  }
+
+  focusMap(lat: number, lng: number): void {
+    if (!this.mapReady || !this.L) return;
+    this.map.setView([lat, lng], 10);
+    this.setMarker(this.L, lat, lng);
   }
 
   setMarker(L: any, lat: number, lng: number): void {
     if (this.marker) this.map.removeLayer(this.marker);
     this.marker = L.marker([lat, lng]).addTo(this.map);
   }
-
-  private pendingCoords: { lat: number, lng: number } | null = null;
 
   loadFactory(id: number): void {
     this.loading = true;
@@ -121,9 +116,9 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
       this.selectedCountryId = f.country.id;
       this.latitude = f.latitude;
       this.longitude = f.longitude;
+      this.focusMap(f.latitude, f.longitude);
       this.imageKeys = [...f.imageKeys];
       this.productIds = [...f.productIds];
-      this.pendingCoords = { lat: f.latitude, lng: f.longitude };
 
       this.factoryService.getCities(f.country.id).then((cityRes: any) => {
         this.cities = cityRes.data;

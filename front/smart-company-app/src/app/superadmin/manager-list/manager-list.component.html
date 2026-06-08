@@ -66,20 +66,21 @@
   </div>
 
   <div class="pagination" *ngIf="totalPages > 1">
-    <button class="page-btn" (click)="goToPage(0)" [disabled]="currentPage === 0">«</button>
-    <button class="page-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 0">‹</button>
+    <button class="page-btn" (click)="goToPage(currentPage - 1)"
+            [disabled]="currentPage === 0">«</button>
 
-    <button
-      class="page-btn"
-      *ngFor="let p of pages"
-      [class.active]="p === currentPage"
-      (click)="goToPage(p)"
-    >
-      {{ p + 1 }}
-    </button>
+    <ng-container *ngFor="let p of getPages()">
+      <span *ngIf="p.toString() === '...'" class="page-btn disabled">…</span>
+      <button *ngIf="p.toString() !== '...'"
+              class="page-btn"
+              [class.active]="p === currentPage"
+              (click)="goToPage(+p)">
+        {{ +p + 1 }}
+      </button>
+    </ng-container>
 
-    <button class="page-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages - 1">›</button>
-    <button class="page-btn" (click)="goToPage(totalPages - 1)" [disabled]="currentPage === totalPages - 1">»</button>
+    <button class="page-btn" (click)="goToPage(currentPage + 1)"
+            [disabled]="currentPage === totalPages - 1">»</button>
   </div>
 
   <div *ngIf="successMessage" class="success-message">
