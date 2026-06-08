@@ -8,3 +8,5 @@ front/smart-company-app/dist/
 npm-debug.log
 
 .vscode
+
+.env
