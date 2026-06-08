@@ -11,65 +11,54 @@
   <!-- Filters -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
-      <div class="row g-3">
 
-        <!-- Search -->
-        <div class="col-md-4">
-          <label class="form-label fw-semibold">Search</label>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Search by name or description..."
-            [(ngModel)]="searchText"
-            (input)="onSearchInput()">
-        </div>
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
 
-        <!-- Category -->
-        <div class="col-md-2">
-          <label class="form-label fw-semibold">Category</label>
-          <select class="form-select" [(ngModel)]="selectedCategoryId" (change)="onFilterChange()">
-            <option [ngValue]="null">All categories</option>
-            <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
-          </select>
-        </div>
+        <input
+          type="text"
+          class="form-control product-search"
+          placeholder="🔍  Search by name or description..."
+          [(ngModel)]="searchText"
+          (input)="onSearchInput()">
 
-        <!-- For Sale -->
-        <div class="col-md-2">
-          <label class="form-label fw-semibold">Availability</label>
-          <select class="form-select" [(ngModel)]="isForSale" (change)="onFilterChange()">
-            <option [ngValue]="null">All</option>
-            <option [ngValue]="true">For sale</option>
-            <option [ngValue]="false">Not for sale</option>
-          </select>
-        </div>
+        <select class="form-select product-select" [(ngModel)]="selectedCategoryId" (change)="onFilterChange()">
+          <option [ngValue]="null">All categories</option>
+          <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+        </select>
 
-        <!-- Price range -->
-        <div class="col-md-2">
-          <label class="form-label fw-semibold">Min price (€)</label>
-          <input type="number" class="form-control" placeholder="0" [(ngModel)]="minPrice" (change)="onFilterChange()" min="0">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label fw-semibold">Max price (€)</label>
-          <input type="number" class="form-control" placeholder="Any" [(ngModel)]="maxPrice" (change)="onFilterChange()" min="0">
+        <select class="form-select product-select product-select--short" [(ngModel)]="isForSale" (change)="onFilterChange()">
+          <option [ngValue]="null">All availability</option>
+          <option [ngValue]="true">✅ For sale</option>
+          <option [ngValue]="false">🚫 Not for sale</option>
+        </select>
+
+        <div class="d-flex align-items-center gap-1">
+          <input type="number" class="form-control product-price-input" placeholder="Min €"
+                [(ngModel)]="minPrice" (change)="onFilterChange()" min="0">
+
+          <input type="number" class="form-control product-price-input" placeholder="Max €"
+                [(ngModel)]="maxPrice" (change)="onFilterChange()" min="0">
         </div>
 
       </div>
 
-      <!-- Sort + Reset -->
-      <div class="d-flex justify-content-between align-items-center mt-3">
-        <div class="d-flex gap-2">
+      <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-2">
+        <div class="d-flex align-items-center gap-2">
           <span class="text-muted small">Sort by:</span>
-          <button class="btn btn-sm" [class.btn-primary]="sortBy === 'name'" [class.btn-outline-secondary]="sortBy !== 'name'" (click)="onSortChange('name')">
+          <button class="btn btn-sm" [class.btn-primary]="sortBy === 'name'"
+                  [class.btn-outline-secondary]="sortBy !== 'name'" (click)="onSortChange('name')">
             Name {{ sortBy === 'name' ? (sortDir === 'asc' ? '↑' : '↓') : '' }}
           </button>
-          <button class="btn btn-sm" [class.btn-primary]="sortBy === 'price'" [class.btn-outline-secondary]="sortBy !== 'price'" (click)="onSortChange('price')">
+          <button class="btn btn-sm" [class.btn-primary]="sortBy === 'price'"
+                  [class.btn-outline-secondary]="sortBy !== 'price'" (click)="onSortChange('price')">
             Price {{ sortBy === 'price' ? (sortDir === 'asc' ? '↑' : '↓') : '' }}
           </button>
-          <button class="btn btn-sm" [class.btn-primary]="sortBy === 'weight'" [class.btn-outline-secondary]="sortBy !== 'weight'" (click)="onSortChange('weight')">
+          <button class="btn btn-sm" [class.btn-primary]="sortBy === 'weight'"
+                  [class.btn-outline-secondary]="sortBy !== 'weight'" (click)="onSortChange('weight')">
             Weight {{ sortBy === 'weight' ? (sortDir === 'asc' ? '↑' : '↓') : '' }}
           </button>
         </div>
-        <button class="btn btn-sm btn-outline-danger" (click)="resetFilters()">Reset filters</button>
+        <button class="btn btn-sm btn-outline-danger" (click)="resetFilters()">✕ Reset</button>
       </div>
 
     </div>
@@ -137,13 +126,18 @@
 
   <!-- Pagination -->
   <nav *ngIf="totalPages > 1" class="mt-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center flex-wrap">
       <li class="page-item" [class.disabled]="currentPage === 0">
         <button class="page-link" (click)="goToPage(currentPage - 1)">«</button>
       </li>
-      <li class="page-item" *ngFor="let p of getPages()" [class.active]="p === currentPage">
-        <button class="page-link" (click)="goToPage(p)">{{ p + 1 }}</button>
-      </li>
+      <ng-container *ngFor="let p of getPages()">
+        <li *ngIf="p.toString() === '...'" class="page-item disabled">
+          <span class="page-link">…</span>
+        </li>
+        <li *ngIf="p.toString() !== '...'" class="page-item" [class.active]="p === currentPage">
+          <button class="page-link" (click)="goToPage(+p)">{{ +p + 1 }}</button>
+        </li>
+      </ng-container>
       <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
         <button class="page-link" (click)="goToPage(currentPage + 1)">»</button>
       </li>

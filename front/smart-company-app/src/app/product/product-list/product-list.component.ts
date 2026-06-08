@@ -160,11 +160,25 @@ export class ProductListComponent implements OnInit, OnDestroy {
     return role === UserType.Manager || role === UserType.SuperAdmin;
   }
 
-  getPages(): number[] {
-    const pages = [];
-    const start = Math.max(0, this.currentPage - 2);
-    const end = Math.min(this.totalPages - 1, this.currentPage + 2);
-    for (let i = start; i <= end; i++) pages.push(i);
-    return pages;
+  getPages(): (number | '...')[] {
+    const total = this.totalPages;
+    const cur = this.currentPage;
+    const last = total - 1;
+
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i);
+    }
+
+    const result: (number | '...')[] = [0, 1];
+    const mid = Math.max(2, Math.min(last - 2, cur));
+    const lo = Math.max(2, mid - 1);
+    const hi = Math.min(last - 2, mid + 1);
+
+    if (lo > 2) result.push('...');
+    for (let i = lo; i <= hi; i++) result.push(i);
+    if (hi < last - 2) result.push('...');
+
+    result.push(last - 1, last);
+    return result;
   }
 }
