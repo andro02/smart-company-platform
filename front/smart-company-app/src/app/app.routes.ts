@@ -12,6 +12,7 @@ import { FactoryListComponent } from './factory/factory-list/factory-list.compon
 import { FactoryFormComponent } from './factory/factory-form/factory-form.component';
 import { FactoryDetailComponent } from './factory/factory-detail/factory-detail.component';
 import { authGuard, mustChangePasswordGuard } from './common/guards/auth.guard';
+import { OrderFormComponent } from './order/order-form/order-form.component';
 
 export const routes: Routes = [
   { path: '',                   component: HomeComponent },
@@ -37,6 +38,9 @@ export const routes: Routes = [
   { path: 'factories/new',      component: FactoryFormComponent,     canActivate: [authGuard] },
   { path: 'factories/edit/:id', component: FactoryFormComponent,     canActivate: [authGuard] },
   { path: 'factories/:id',      component: FactoryDetailComponent,   canActivate: [authGuard] },
+
+  // Narudžbine
+  { path: 'orders/new', component: OrderFormComponent, canActivate: [authGuard] },
 
   { path: '**',                 redirectTo: '' }
 ];
