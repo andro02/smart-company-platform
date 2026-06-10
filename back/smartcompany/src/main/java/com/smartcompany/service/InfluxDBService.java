@@ -70,4 +70,45 @@ public class InfluxDBService {
     public void writeOfflineEvent(Long factoryId) {
         writeHeartbeat(factoryId, false, Instant.now());
     }
+
+    public void writeWarehouseHeartbeat(Long warehouseId) {
+        writeWarehouseStatus(warehouseId, true, Instant.now());
+    }
+
+    public void writeWarehouseOnlineEvent(Long warehouseId) {
+        writeWarehouseStatus(warehouseId, true, Instant.now());
+    }
+
+    public void writeWarehouseOfflineEvent(Long warehouseId) {
+        writeWarehouseStatus(warehouseId, false, Instant.now());
+    }
+
+    private void writeWarehouseStatus(Long warehouseId, boolean online, Instant timestamp) {
+        try {
+            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
+            Point point = Point
+                .measurement("warehouse_status")
+                .addTag("warehouse_id", String.valueOf(warehouseId))
+                .addField("online", online ? 1 : 0)
+                .time(timestamp, WritePrecision.MS);
+            writeApi.writePoint(bucket, org, point);
+        } catch (Exception e) {
+            System.err.println("[InfluxDB] Failed to write warehouse status for " + warehouseId + ": " + e.getMessage());
+        }
+    }
+
+    public void writeTemperature(Long warehouseId, Long sectorId, Double temperature, Instant timestamp) {
+        try {
+            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
+            Point point = Point
+                .measurement("warehouse_temperature")
+                .addTag("warehouse_id", String.valueOf(warehouseId))
+                .addTag("sector_id", String.valueOf(sectorId))
+                .addField("temperature", temperature)
+                .time(timestamp, WritePrecision.MS);
+            writeApi.writePoint(bucket, org, point);
+        } catch (Exception e) {
+            System.err.println("[InfluxDB] Failed to write temperature for warehouse " + warehouseId + ": " + e.getMessage());
+        }
+    }
 }
