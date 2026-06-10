@@ -55,6 +55,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.PUT, "/users/*/block").hasRole("SuperAdmin")
                     .requestMatchers(HttpMethod.PUT, "/users/*/unblock").hasRole("SuperAdmin")
                     .requestMatchers(HttpMethod.POST, "/register/manager").hasRole("SuperAdmin")
+                    .requestMatchers(HttpMethod.GET,    "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.POST,   "/warehouses").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.PUT,    "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.DELETE, "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
                     // Ostalo zahteva autentifikaciju
                     .anyRequest().authenticated()
             );
