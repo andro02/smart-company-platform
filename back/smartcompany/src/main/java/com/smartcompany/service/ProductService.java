@@ -8,6 +8,7 @@ import com.smartcompany.model.Category;
 import com.smartcompany.model.Product;
 import com.smartcompany.repository.CategoryRepository;
 import com.smartcompany.repository.ProductRepository;
+import com.smartcompany.repository.warehouse.WarehouseItemRepository;
 import com.smartcompany.specification.ProductSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -30,6 +31,9 @@ public class ProductService {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private WarehouseItemRepository warehouseItemRepository;
 
     public Page<ProductDto> search(String search, Long categoryId, Boolean isForSale,
                                     BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
@@ -88,7 +92,8 @@ public class ProductService {
     }
 
     public ProductDto toDto(Product product) {
-        CategoryDto categoryDto = categoryService.toDto(product.getCategory());
+        CategoryDto categoryDto = categoryService.toDto(product.getCategory());    
+        Integer totalStock = warehouseItemRepository.sumQuantityByProductId(product.getId());
         return new ProductDto(
                 product.getId(),
                 product.getName(),
@@ -97,7 +102,8 @@ public class ProductService {
                 product.getWeight(),
                 product.getImage(),
                 product.isForSale(),
-                categoryDto
+                categoryDto,
+                totalStock 
         );
     }
 }

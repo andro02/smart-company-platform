@@ -18,4 +18,5 @@ public class ProductDto {
     private String image;
     private boolean isForSale;
     private CategoryDto category;
+    private Integer totalStock;
 }

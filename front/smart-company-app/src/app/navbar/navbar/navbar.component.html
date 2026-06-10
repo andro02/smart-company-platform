@@ -14,7 +14,7 @@
                 *ngIf="(axios.getRole() == 'Manager' || axios.getRole() == 'SuperAdmin') && axios.getIsActive() == true" class="navbar-nav">
             </app-manager-navbar>
             <app-superadmin-navbar *ngIf="axios.getRole() == 'SuperAdmin' && axios.getIsActive() == true" class="navbar-nav"></app-superadmin-navbar>
-            <!-- <app-citizen-navbar *ngIf="axios.getRole() == 'Citizen' && axios.getIsActive() == true" class="navbar-nav"></app-citizen-navbar> -->
+            <app-customer-navbar *ngIf="axios.getRole() == 'Customer' && axios.getIsActive() == true" class="navbar-nav"></app-customer-navbar>
         </ul>
         <span>
             <ul class="navbar-nav ml-auto">

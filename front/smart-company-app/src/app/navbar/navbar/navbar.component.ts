@@ -5,11 +5,12 @@ import { CommonModule } from '@angular/common';
 import { SuperadminNavbarComponent } from '../superadmin-navbar/superadmin-navbar.component';
 import { ManagerNavbarComponent } from '../manager-navbar/manager-navbar.component';
 import { FileService } from '../../file.service';
+import { CustomerNavbarComponent } from '../customer-navbar/customer-navbar.component';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterModule, CommonModule, SuperadminNavbarComponent, ManagerNavbarComponent],
+  imports: [RouterModule, CommonModule, SuperadminNavbarComponent, ManagerNavbarComponent, CustomerNavbarComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
