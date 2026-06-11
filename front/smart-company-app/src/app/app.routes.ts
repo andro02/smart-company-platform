@@ -13,6 +13,9 @@ import { FactoryFormComponent } from './factory/factory-form/factory-form.compon
 import { FactoryDetailComponent } from './factory/factory-detail/factory-detail.component';
 import { authGuard, mustChangePasswordGuard } from './common/guards/auth.guard';
 import { OrderFormComponent } from './order/order-form/order-form.component';
+import { WarehouseListComponent } from './warehouse/warehouse-list/warehouse-list.component';
+import { WarehouseDetailComponent } from './warehouse/warehouse-detail/warehouse-detail.component';
+import { WarehouseFormComponent } from './warehouse/warehouse-form/warehouse-form.component';
 
 export const routes: Routes = [
   { path: '',                   component: HomeComponent },
@@ -41,6 +44,12 @@ export const routes: Routes = [
 
   // Narudžbine
   { path: 'orders/new', component: OrderFormComponent, canActivate: [authGuard] },
+
+  // Magacini
+  { path: 'warehouses',          component: WarehouseListComponent,   canActivate: [authGuard] },
+  { path: 'warehouses/new',      component: WarehouseFormComponent,   canActivate: [authGuard] },
+  { path: 'warehouses/edit/:id', component: WarehouseFormComponent,   canActivate: [authGuard] },
+  { path: 'warehouses/:id',      component: WarehouseDetailComponent, canActivate: [authGuard] },
 
   { path: '**',                 redirectTo: '' }
 ];
