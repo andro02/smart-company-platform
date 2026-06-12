@@ -1,13 +1,16 @@
 package com.smartcompany.controller.warehouse;
 
 import com.smartcompany.dto.*;
+import com.smartcompany.dto.warehouse.TemperatureDataDto;
 import com.smartcompany.dto.warehouse.WarehouseDto;
 import com.smartcompany.dto.warehouse.WarehouseRequestDto;
+import com.smartcompany.service.warehouse.TemperatureService;
 import com.smartcompany.service.warehouse.WarehouseService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.*;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +27,7 @@ public class WarehouseController {
 
     private final WarehouseService warehouseService;
     private final com.smartcompany.service.FactoryService factoryService;
+    private final TemperatureService temperatureService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
@@ -81,5 +85,19 @@ public class WarehouseController {
     @GetMapping("/cities")
     public ResponseEntity<List<CityDto>> getCities(@RequestParam Long countryId) {
         return ResponseEntity.ok(factoryService.getCitiesByCountry(countryId));
+    }
+
+    @GetMapping("/{warehouseId}/sectors/{sectorId}/temperature")
+    @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
+    public ResponseEntity<TemperatureDataDto> getTemperatureData(
+            @PathVariable Long warehouseId,
+            @PathVariable Long sectorId,
+            @RequestParam(defaultValue = "WEEK") String period,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to
+    ) {
+        return ResponseEntity.ok(
+            temperatureService.getTemperatureData(warehouseId, sectorId, period, from, to)
+        );
     }
 }
