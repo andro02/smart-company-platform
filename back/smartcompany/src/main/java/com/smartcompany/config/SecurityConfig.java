@@ -59,6 +59,9 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST,   "/warehouses").hasAnyRole("Manager", "SuperAdmin")
                     .requestMatchers(HttpMethod.PUT,    "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
                     .requestMatchers(HttpMethod.DELETE, "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.POST, "/companies").hasRole("Customer")
+                    .requestMatchers(HttpMethod.GET, "/companies/countries").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/companies/cities").authenticated()
                     // Ostalo zahteva autentifikaciju
                     .anyRequest().authenticated()
             );
