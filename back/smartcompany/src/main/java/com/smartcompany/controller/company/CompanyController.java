@@ -3,14 +3,20 @@ package com.smartcompany.controller.company;
 import com.smartcompany.dto.CityDto;
 import com.smartcompany.dto.CountryDto;
 import com.smartcompany.dto.UserDto;
+import com.smartcompany.dto.company.CompanyDecisionDto;
 import com.smartcompany.dto.company.CompanyDetailDto;
 import com.smartcompany.dto.company.CompanyRequestDto;
+import com.smartcompany.model.company.CompanyStatus;
 import com.smartcompany.service.FactoryService;
 import com.smartcompany.service.company.CompanyService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,5 +52,35 @@ public class CompanyController {
     @GetMapping("/cities")
     public ResponseEntity<List<CityDto>> getCities(@RequestParam Long countryId) {
         return ResponseEntity.ok(factoryService.getCitiesByCountry(countryId));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
+    public ResponseEntity<Page<CompanyDetailDto>> search(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) CompanyStatus status,
+            @RequestParam(defaultValue = "0")  int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+        return ResponseEntity.ok(companyService.search(search, status, PageRequest.of(page, size, sort)));
+    }
+
+    @GetMapping("/{id}/manage")
+    @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
+    public ResponseEntity<CompanyDetailDto> getByIdForManager(@PathVariable Long id) {
+        return ResponseEntity.ok(companyService.getByIdForManager(id));
+    }
+
+    @PutMapping("/{id}/decision")
+    @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
+    public ResponseEntity<CompanyDetailDto> decide(
+            @PathVariable Long id,
+            @RequestBody CompanyDecisionDto dto) {
+        return ResponseEntity.ok(companyService.decide(id, dto));
     }
 }
