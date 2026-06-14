@@ -9,6 +9,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import com.smartcompany.model.company.CompanyStatus;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
@@ -76,5 +78,27 @@ public class EmailService {
             throw new RuntimeException("Greška pri slanju fakture: " + e.getMessage(), e);
         }
     }
-    
+
+    public void sendCompanyDecisionEmail(String toEmail, String companyName,
+                                        CompanyStatus status, String rejectionReason) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(sender);
+            message.setTo(toEmail);
+
+            if (status == CompanyStatus.APPROVED) {
+                message.setSubject("Zahtev za registraciju firme odobren");
+                message.setText("Vaš zahtev za registraciju firme \"" + companyName +
+                    "\" je odobren. Sada možete koristiti ovu firmu za poručivanje proizvoda.");
+            } else {
+                message.setSubject("Zahtev za registraciju firme odbijen");
+                message.setText("Vaš zahtev za registraciju firme \"" + companyName +
+                    "\" je odbijen.\n\nRazlog: " + rejectionReason);
+            }
+
+            mailSender.send(message);
+        } catch (MailException e) {
+            logger.error("Failed to send company decision email to {}: {}", toEmail, e.getMessage());
+        }
+    }
 }
