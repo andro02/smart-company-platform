@@ -17,6 +17,8 @@ import { WarehouseListComponent } from './warehouse/warehouse-list/warehouse-lis
 import { WarehouseDetailComponent } from './warehouse/warehouse-detail/warehouse-detail.component';
 import { WarehouseFormComponent } from './warehouse/warehouse-form/warehouse-form.component';
 import { CompanyFormComponent } from './company/company-form/company-form';
+import { CompanyRequestListComponent } from './company/company-request-list/company-request-list.component';
+import { CompanyRequestDetailComponent } from './company/company-request-detail/company-request-detail.component';
 
 export const routes: Routes = [
   { path: '',                   component: HomeComponent },
@@ -48,6 +50,8 @@ export const routes: Routes = [
 
   // Firme
   { path: 'companies/new', component: CompanyFormComponent, canActivate: [authGuard] },
+  { path: 'companies/manage',     component: CompanyRequestListComponent,   canActivate: [authGuard] },
+  { path: 'companies/manage/:id', component: CompanyRequestDetailComponent, canActivate: [authGuard] },
 
   // Magacini
   { path: 'warehouses',          component: WarehouseListComponent,   canActivate: [authGuard] },

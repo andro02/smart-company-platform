@@ -60,8 +60,11 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.PUT,    "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
                     .requestMatchers(HttpMethod.DELETE, "/warehouses/**").hasAnyRole("Manager", "SuperAdmin")
                     .requestMatchers(HttpMethod.POST, "/companies").hasRole("Customer")
-                    .requestMatchers(HttpMethod.GET, "/companies/countries").authenticated()
-                    .requestMatchers(HttpMethod.GET, "/companies/cities").authenticated()
+                    .requestMatchers(HttpMethod.GET,  "/companies").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.GET,  "/companies/countries").authenticated()
+                    .requestMatchers(HttpMethod.GET,  "/companies/cities").authenticated()
+                    .requestMatchers(HttpMethod.GET,  "/companies/*/manage").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.PUT,  "/companies/*/decision").hasAnyRole("Manager", "SuperAdmin")
                     // Ostalo zahteva autentifikaciju
                     .anyRequest().authenticated()
             );
