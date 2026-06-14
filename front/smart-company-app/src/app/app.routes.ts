@@ -16,6 +16,7 @@ import { OrderFormComponent } from './order/order-form/order-form.component';
 import { WarehouseListComponent } from './warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseDetailComponent } from './warehouse/warehouse-detail/warehouse-detail.component';
 import { WarehouseFormComponent } from './warehouse/warehouse-form/warehouse-form.component';
+import { CompanyFormComponent } from './company/company-form/company-form';
 
 export const routes: Routes = [
   { path: '',                   component: HomeComponent },
@@ -44,6 +45,9 @@ export const routes: Routes = [
 
   // Narudžbine
   { path: 'orders/new', component: OrderFormComponent, canActivate: [authGuard] },
+
+  // Firme
+  { path: 'companies/new', component: CompanyFormComponent, canActivate: [authGuard] },
 
   // Magacini
   { path: 'warehouses',          component: WarehouseListComponent,   canActivate: [authGuard] },
