@@ -2,6 +2,7 @@ package com.smartcompany.service.company;
 
 import com.smartcompany.dto.CityDto;
 import com.smartcompany.dto.CountryDto;
+import com.smartcompany.dto.company.CompanyDecisionDto;
 import com.smartcompany.dto.company.CompanyDetailDto;
 import com.smartcompany.dto.company.CompanyRequestDto;
 import com.smartcompany.exception.AppException;
@@ -16,7 +17,14 @@ import com.smartcompany.repository.CityRepository;
 import com.smartcompany.repository.CountryRepository;
 import com.smartcompany.repository.UserRepository;
 import com.smartcompany.repository.company.CompanyRepository;
+import com.smartcompany.service.EmailService;
+import com.smartcompany.specification.CompanySpecification;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +39,7 @@ public class CompanyService {
     private final CountryRepository countryRepository;
     private final CityRepository cityRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Transactional
     public CompanyDetailDto createRequest(String ownerUsername, CompanyRequestDto dto) {
@@ -95,5 +104,49 @@ public class CompanyService {
             imageKeys,
             documents
         );
+    }
+    // ─── Za menadžera ────────────────────────────────────────────────────────
+
+    public Page<CompanyDetailDto> search(String search, CompanyStatus status, Pageable pageable) {
+        Specification<Company> spec = CompanySpecification.search(search, status);
+        return companyRepository.findAll(spec, pageable).map(this::toDto);
+    }
+
+    public CompanyDetailDto getByIdForManager(Long id) {
+        Company company = companyRepository.findById(id)
+            .orElseThrow(() -> new AppException("Company not found", HttpStatus.NOT_FOUND));
+        return toDto(company);
+    }
+
+    @Transactional
+    public CompanyDetailDto decide(Long id, CompanyDecisionDto dto) {
+        Company company = companyRepository.findById(id)
+            .orElseThrow(() -> new AppException("Company not found", HttpStatus.NOT_FOUND));
+
+        if (company.getStatus() != CompanyStatus.PENDING) {
+            throw new AppException("Company request already processed", HttpStatus.BAD_REQUEST);
+        }
+
+        if (dto.approve()) {
+            company.setStatus(CompanyStatus.APPROVED);
+            company.setRejectionReason(null);
+        } else {
+            if (dto.rejectionReason() == null || dto.rejectionReason().isBlank()) {
+                throw new AppException("Rejection reason is required", HttpStatus.BAD_REQUEST);
+            }
+            company.setStatus(CompanyStatus.REJECTED);
+            company.setRejectionReason(dto.rejectionReason());
+        }
+
+        Company saved = companyRepository.save(company);
+
+        emailService.sendCompanyDecisionEmail(
+            saved.getOwner().getEmail(),
+            saved.getName(),
+            saved.getStatus(),
+            saved.getRejectionReason()
+        );
+
+        return toDto(saved);
     }
 }
