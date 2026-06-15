@@ -18,6 +18,10 @@ public class RabbitMQConfig {
     public static final String WAREHOUSE_TEMPERATURE_QUEUE = "warehouse.temperature";
     public static final String WAREHOUSE_EXCHANGE          = "warehouse.exchange";
 
+    public static final String VEHICLE_HEARTBEAT_QUEUE = "vehicle.heartbeat";
+    public static final String VEHICLE_LOCATION_QUEUE  = "vehicle.location";
+    public static final String VEHICLE_EXCHANGE        = "vehicle.exchange";
+
     @Bean
     public Queue heartbeatQueue() {
         return QueueBuilder.durable(FACTORY_HEARTBEAT_QUEUE).build();
@@ -66,6 +70,31 @@ public class RabbitMQConfig {
     @Bean
     public Binding warehouseTemperatureBinding(Queue warehouseTemperatureQueue, TopicExchange warehouseExchange) {
         return BindingBuilder.bind(warehouseTemperatureQueue).to(warehouseExchange).with("warehouse.temperature");
+    }
+
+    @Bean
+    public Queue vehicleHeartbeatQueue() {
+        return QueueBuilder.durable(VEHICLE_HEARTBEAT_QUEUE).build();
+    }
+
+    @Bean
+    public Queue vehicleLocationQueue() {
+        return QueueBuilder.durable(VEHICLE_LOCATION_QUEUE).build();
+    }
+
+    @Bean
+    public TopicExchange vehicleExchange() {
+        return new TopicExchange(VEHICLE_EXCHANGE);
+    }
+
+    @Bean
+    public Binding vehicleHeartbeatBinding(Queue vehicleHeartbeatQueue, TopicExchange vehicleExchange) {
+        return BindingBuilder.bind(vehicleHeartbeatQueue).to(vehicleExchange).with("vehicle.heartbeat");
+    }
+
+    @Bean
+    public Binding vehicleLocationBinding(Queue vehicleLocationQueue, TopicExchange vehicleExchange) {
+        return BindingBuilder.bind(vehicleLocationQueue).to(vehicleExchange).with("vehicle.location");
     }
 
     @Bean
