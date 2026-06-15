@@ -44,4 +44,11 @@ export class VehicleService {
   getModels(brandId: number) {
     return this.axios.request('GET', `/vehicles/models?brandId=${brandId}`, null);
   }
+
+  getDistanceData(vehicleId: number, period: string, from?: string, to?: string) {
+    const p = new URLSearchParams({ period });
+    if (from) p.set('from', from);
+    if (to)   p.set('to', to);
+    return this.axios.request('GET', `/vehicles/${vehicleId}/distance?${p}`, null);
+  }
 }
