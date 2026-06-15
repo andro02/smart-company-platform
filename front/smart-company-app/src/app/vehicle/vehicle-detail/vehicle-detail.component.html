@@ -43,5 +43,33 @@
       </div>
     </section>
 
+    <section class="chart-section">
+        <h2 class="section-title">Distance traveled</h2>
+
+        <div class="period-bar">
+            <div class="period-tabs">
+            <button *ngFor="let p of periods"
+                    class="period-tab"
+                    [class.active]="selectedPeriod === p.value"
+                    (click)="selectedPeriod = p.value; onPeriodChange()">
+                {{ p.label }}
+            </button>
+            </div>
+            <div *ngIf="selectedPeriod === 'CUSTOM'" class="custom-range">
+            <label>From: <input type="date" [(ngModel)]="customFrom" (change)="loadChart()"/></label>
+            <label>To: <input type="date" [(ngModel)]="customTo" (change)="loadChart()"/></label>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <div *ngIf="loadingChart" class="chart-loading">Loading chart data...</div>
+            <div *ngIf="chartError" class="chart-error">{{ chartError }}</div>
+            <div *ngIf="!loadingChart && !chartError && !chartHasData" class="no-data-msg">
+            No distance data for this period.
+            </div>
+            <canvas #chartCanvas *ngIf="chartHasData && !loadingChart"></canvas>
+        </div>
+    </section>
+
   </ng-container>
 </div>

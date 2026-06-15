@@ -1,6 +1,7 @@
 package com.smartcompany.controller.vehicle;
 
 import com.smartcompany.dto.vehicle.*;
+import com.smartcompany.service.vehicle.DistanceService;
 import com.smartcompany.service.vehicle.VehicleService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,7 @@ import java.util.List;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final DistanceService distanceService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
@@ -77,4 +79,17 @@ public class VehicleController {
     public ResponseEntity<List<VehicleModelDto>> getModels(@RequestParam Long brandId) {
         return ResponseEntity.ok(vehicleService.getModelsByBrand(brandId));
     }
+
+    @GetMapping("/{vehicleId}/distance")
+    @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
+    public ResponseEntity<DistanceDataDto> getDistanceData(
+            @PathVariable Long vehicleId,
+            @RequestParam(defaultValue = "WEEK") String period,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to
+    ) {
+        return ResponseEntity.ok(
+            distanceService.getDistanceData(vehicleId, period, from, to)
+        );
+    }    
 }

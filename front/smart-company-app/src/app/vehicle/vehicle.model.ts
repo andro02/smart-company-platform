@@ -32,3 +32,9 @@ export interface VehicleSearchParams {
   modelId?: number;
   isOnline?: boolean;
 }
+
+export interface DistanceDataDto {
+  granularity: string;
+  labels: string[];
+  values: number[];
+}
