@@ -65,6 +65,12 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET,  "/companies/cities").authenticated()
                     .requestMatchers(HttpMethod.GET,  "/companies/*/manage").hasAnyRole("Manager", "SuperAdmin")
                     .requestMatchers(HttpMethod.PUT,  "/companies/*/decision").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.GET,    "/vehicles/brands").authenticated()
+                    .requestMatchers(HttpMethod.GET,    "/vehicles/models").authenticated()
+                    .requestMatchers(HttpMethod.GET,    "/vehicles/**").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.POST,   "/vehicles").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.PUT,    "/vehicles/**").hasAnyRole("Manager", "SuperAdmin")
+                    .requestMatchers(HttpMethod.DELETE, "/vehicles/**").hasAnyRole("Manager", "SuperAdmin")
                     // Ostalo zahteva autentifikaciju
                     .anyRequest().authenticated()
             );
