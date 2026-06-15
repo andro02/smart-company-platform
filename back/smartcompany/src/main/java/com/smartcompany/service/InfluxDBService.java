@@ -111,4 +111,44 @@ public class InfluxDBService {
             System.err.println("[InfluxDB] Failed to write temperature for warehouse " + warehouseId + ": " + e.getMessage());
         }
     }
+
+    public void writeVehicleHeartbeat(Long vehicleId) {
+        writeVehicleStatus(vehicleId, true, Instant.now());
+    }
+
+    public void writeVehicleOnlineEvent(Long vehicleId) {
+        writeVehicleStatus(vehicleId, true, Instant.now());
+    }
+
+    public void writeVehicleOfflineEvent(Long vehicleId) {
+        writeVehicleStatus(vehicleId, false, Instant.now());
+    }
+
+    private void writeVehicleStatus(Long vehicleId, boolean online, Instant timestamp) {
+        try {
+            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
+            Point point = Point
+                .measurement("vehicle_status")
+                .addTag("vehicle_id", String.valueOf(vehicleId))
+                .addField("online", online ? 1 : 0)
+                .time(timestamp, WritePrecision.MS);
+            writeApi.writePoint(bucket, org, point);
+        } catch (Exception e) {
+            System.err.println("[InfluxDB] Failed to write vehicle status for " + vehicleId + ": " + e.getMessage());
+        }
+    }
+
+    public void writeVehicleDistance(Long vehicleId, Double distance, Instant timestamp) {
+        try {
+            WriteApiBlocking writeApi = influxDBClient.getWriteApiBlocking();
+            Point point = Point
+                .measurement("vehicle_distance")
+                .addTag("vehicle_id", String.valueOf(vehicleId))
+                .addField("distance", distance)
+                .time(timestamp, WritePrecision.MS);
+            writeApi.writePoint(bucket, org, point);
+        } catch (Exception e) {
+            System.err.println("[InfluxDB] Failed to write vehicle distance for " + vehicleId + ": " + e.getMessage());
+        }
+    }
 }

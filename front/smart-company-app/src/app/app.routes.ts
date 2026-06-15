@@ -19,6 +19,9 @@ import { WarehouseFormComponent } from './warehouse/warehouse-form/warehouse-for
 import { CompanyFormComponent } from './company/company-form/company-form';
 import { CompanyRequestListComponent } from './company/company-request-list/company-request-list.component';
 import { CompanyRequestDetailComponent } from './company/company-request-detail/company-request-detail.component';
+import { VehicleDetailComponent } from './vehicle/vehicle-detail/vehicle-detail.component';
+import { VehicleFormComponent } from './vehicle/vehicle-form/vehicle-form.component';
+import { VehicleListComponent } from './vehicle/vehicle-list/vehicle-list.component';
 
 export const routes: Routes = [
   { path: '',                   component: HomeComponent },
@@ -58,6 +61,12 @@ export const routes: Routes = [
   { path: 'warehouses/new',      component: WarehouseFormComponent,   canActivate: [authGuard] },
   { path: 'warehouses/edit/:id', component: WarehouseFormComponent,   canActivate: [authGuard] },
   { path: 'warehouses/:id',      component: WarehouseDetailComponent, canActivate: [authGuard] },
+
+  // Vozila
+  { path: 'vehicles',          component: VehicleListComponent,   canActivate: [authGuard] },
+  { path: 'vehicles/new',      component: VehicleFormComponent,   canActivate: [authGuard] },
+  { path: 'vehicles/edit/:id', component: VehicleFormComponent,   canActivate: [authGuard] },
+  { path: 'vehicles/:id',      component: VehicleDetailComponent, canActivate: [authGuard] },
 
   { path: '**',                 redirectTo: '' }
 ];
