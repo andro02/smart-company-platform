@@ -16,7 +16,7 @@ import { OrderFormComponent } from './order/order-form/order-form.component';
 import { WarehouseListComponent } from './warehouse/warehouse-list/warehouse-list.component';
 import { WarehouseDetailComponent } from './warehouse/warehouse-detail/warehouse-detail.component';
 import { WarehouseFormComponent } from './warehouse/warehouse-form/warehouse-form.component';
-import { CompanyFormComponent } from './company/company-form/company-form';
+import { CompanyFormComponent } from './company/company-form/company-form.component';
 import { CompanyRequestListComponent } from './company/company-request-list/company-request-list.component';
 import { CompanyRequestDetailComponent } from './company/company-request-detail/company-request-detail.component';
 import { VehicleDetailComponent } from './vehicle/vehicle-detail/vehicle-detail.component';

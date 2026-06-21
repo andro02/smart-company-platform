@@ -10,3 +10,5 @@ npm-debug.log
 .vscode
 
 .env
+
+seed_script.py
