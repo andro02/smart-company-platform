@@ -100,6 +100,23 @@
           <p class="text-muted small flex-grow-1" style="overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
             {{ product.description }}
           </p>
+          <button
+            class="btn btn-sm btn-outline-secondary mt-2 w-100"
+            (click)="toggleFactories(product.id)">
+            <span *ngIf="loadingFactoriesFor === product.id" class="spinner-border spinner-border-sm me-1"></span>
+            {{ expandedFactories.has(product.id) ? 'Hide factories' : '🏭 Show factories' }}
+          </button>
+
+          <div class="mt-2" style="height: 100px; overflow-y: auto;">
+            <ng-container *ngIf="expandedFactories.has(product.id)">
+              <span class="badge bg-light text-dark border me-1 mb-1" *ngFor="let f of expandedFactories.get(product.id)">
+                {{ f.name }}
+              </span>
+              <div *ngIf="expandedFactories.get(product.id)?.length === 0" class="text-muted small">
+                No factories.
+              </div>
+            </ng-container>
+          </div>
           <div class="d-flex justify-content-between align-items-center mt-2">
             <span class="fw-bold text-primary">€{{ product.price | number:'1.2-2' }}</span>
             <span class="badge" [class.bg-success]="product.forSale" [class.bg-secondary]="!product.forSale">

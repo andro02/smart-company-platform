@@ -1,18 +1,25 @@
 package com.smartcompany.service;
 
 import com.smartcompany.dto.CategoryDto;
+import com.smartcompany.dto.FactorySummaryDto;
 import com.smartcompany.dto.ProductDto;
 import com.smartcompany.dto.ProductRequestDto;
 import com.smartcompany.exception.AppException;
 import com.smartcompany.model.Category;
 import com.smartcompany.model.Product;
 import com.smartcompany.repository.CategoryRepository;
+import com.smartcompany.repository.FactoryRepository;
 import com.smartcompany.repository.ProductRepository;
 import com.smartcompany.repository.warehouse.WarehouseItemRepository;
 import com.smartcompany.specification.ProductSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
+import com.smartcompany.dto.FactorySummaryDto;
+import com.smartcompany.model.Factory;
+import com.smartcompany.repository.FactoryRepository;
+import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,6 +32,9 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private FactoryRepository factoryRepository;
 
     @Autowired
     private CategoryRepository categoryRepository;
@@ -44,7 +54,7 @@ public class ProductService {
     public ProductDto getById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
-        return toDto(product);
+        return toDtoWithFactories(product);
     }
 
     @Transactional
@@ -61,7 +71,13 @@ public class ProductService {
         product.setForSale(dto.isForSale());
         product.setCategory(category);
 
-        return toDto(productRepository.save(product));
+        Product saved = productRepository.save(product);
+
+        if (dto.factoryIds() != null) {
+            updateFactoryAssociations(saved, dto.factoryIds());
+        }
+
+        return toDto(saved);
     }
 
     @Transactional
@@ -80,7 +96,34 @@ public class ProductService {
         product.setForSale(dto.isForSale());
         product.setCategory(category);
 
-        return toDto(productRepository.save(product));
+        Product saved = productRepository.save(product);
+
+        if (dto.factoryIds() != null) {
+            updateFactoryAssociations(saved, dto.factoryIds());
+        }
+
+        return toDto(saved);
+    }
+
+    private void updateFactoryAssociations(Product product, List<Long> factoryIds) {
+        // Skini proizvod sa fabrika koje ga vise ne proizvode
+        List<Factory> currentFactories = factoryRepository.findByProductId(product.getId());
+        for (Factory f : currentFactories) {
+            if (!factoryIds.contains(f.getId())) {
+                f.getProducts().removeIf(p -> p.getId().equals(product.getId()));
+                factoryRepository.save(f);
+            }
+        }
+
+        // Dodaj proizvod na nove fabrike
+        List<Factory> newFactories = factoryRepository.findAllById(factoryIds);
+        for (Factory f : newFactories) {
+            boolean alreadyLinked = f.getProducts().stream().anyMatch(p -> p.getId().equals(product.getId()));
+            if (!alreadyLinked) {
+                f.getProducts().add(product);
+                factoryRepository.save(f);
+            }
+        }
     }
 
     @Transactional
@@ -92,8 +135,9 @@ public class ProductService {
     }
 
     public ProductDto toDto(Product product) {
-        CategoryDto categoryDto = categoryService.toDto(product.getCategory());    
+        CategoryDto categoryDto = categoryService.toDto(product.getCategory());
         Integer totalStock = warehouseItemRepository.sumQuantityByProductId(product.getId());
+
         return new ProductDto(
                 product.getId(),
                 product.getName(),
@@ -103,7 +147,19 @@ public class ProductService {
                 product.getImage(),
                 product.isForSale(),
                 categoryDto,
-                totalStock 
+                totalStock,
+                null // factories - ucitava se posebno
         );
     }
+
+    // Koristi se za getById - SA fabrikama
+    public ProductDto toDtoWithFactories(Product product) {
+        ProductDto base = toDto(product);
+        List<FactorySummaryDto> factories = factoryRepository.findByProductId(product.getId()).stream()
+                .map(f -> new FactorySummaryDto(f.getId(), f.getName()))
+                .toList();
+        base.setFactories(factories);
+        return base;
+    }
+
 }

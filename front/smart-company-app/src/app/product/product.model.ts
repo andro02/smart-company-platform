@@ -13,6 +13,7 @@ export interface Product {
   image: string | null;
   forSale: boolean;
   category: Category;
+  factories: FactorySummary[];
 }
 
 export interface ProductRequest {
@@ -43,4 +44,9 @@ export interface ProductSearchParams {
   size?: number;
   sortBy?: string;
   sortDir?: string;
+}
+
+export interface FactorySummary {
+  id: number;
+  name: string;
 }
