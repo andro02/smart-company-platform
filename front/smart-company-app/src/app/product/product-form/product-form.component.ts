@@ -19,6 +19,8 @@ export class ProductFormComponent implements OnInit {
   form: FormGroup;
   categoryForm: FormGroup;
   categories: Category[] = [];
+  factories: any[] = [];
+  selectedFactoryIds: number[] = [];
 
   isEditMode = false;
   productId: number | null = null;
@@ -64,6 +66,7 @@ export class ProductFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
+    this.loadFactories();
 
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
@@ -82,6 +85,12 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  loadFactories(): void {
+    this.productService.getFactories().then((res: any) => {
+      this.factories = res.data.content;
+    });
+  }
+
   loadProduct(id: number): void {
     this.productService.getById(id).then((res: any) => {
       const p = res.data;
@@ -94,6 +103,7 @@ export class ProductFormComponent implements OnInit {
         isForSale: p.forSale
       });
       this.existingImageKey = p.image;
+      this.selectedFactoryIds = p.factories?.map((f: any) => f.id) ?? [];
       if (p.image) {
         this.fileService.getDownloadUrl(p.image).subscribe({
           next: (url) => this.imagePreviewUrl = url,
@@ -101,6 +111,19 @@ export class ProductFormComponent implements OnInit {
         });
       }
     });
+  }
+
+  toggleFactory(factoryId: number): void {
+    const idx = this.selectedFactoryIds.indexOf(factoryId);
+    if (idx === -1) {
+      this.selectedFactoryIds.push(factoryId);
+    } else {
+      this.selectedFactoryIds.splice(idx, 1);
+    }
+  }
+
+  isFactorySelected(factoryId: number): boolean {
+    return this.selectedFactoryIds.includes(factoryId);
   }
 
   // --- Category modal ---
@@ -206,7 +229,8 @@ export class ProductFormComponent implements OnInit {
       weight: this.form.value.weight,
       image: imageKey,
       isForSale: this.form.value.isForSale,
-      categoryId: Number(this.form.value.categoryId)
+      categoryId: Number(this.form.value.categoryId),
+      factoryIds: this.selectedFactoryIds
     };
 
     const request = this.isEditMode

@@ -58,6 +58,26 @@
       <label class="form-check-label" for="isForSale">Available for sale</label>
     </div>
 
+    <!-- Factories -->
+    <div class="mb-4">
+      <label class="form-label fw-semibold">Manufactured in factories</label>
+      <p class="text-muted small mb-2">Select factories that produce this product (optional).</p>
+      <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+        <div class="form-check" *ngFor="let factory of factories">
+          <input
+            type="checkbox"
+            class="form-check-input"
+            [id]="'factory-' + factory.id"
+            [checked]="isFactorySelected(factory.id)"
+            (change)="toggleFactory(factory.id)">
+          <label class="form-check-label" [for]="'factory-' + factory.id">
+            {{ factory.name }}
+          </label>
+        </div>
+        <div *ngIf="factories.length === 0" class="text-muted small">No factories available.</div>
+      </div>
+    </div>
+
     <!-- Image -->
     <div class="mb-4">
       <label class="form-label fw-semibold">
