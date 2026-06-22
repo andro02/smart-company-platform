@@ -14,6 +14,8 @@ import { passwordMatchValidator } from '../../common/validators/password-match.v
   styleUrl: './change-password.component.css'
 })
 export class ChangePasswordComponent {
+  submitting = false;
+  errorMessage = '';
 
   changePasswordForm: FormGroup;
 
@@ -32,30 +34,25 @@ export class ChangePasswordComponent {
   }
 
   onSubmit(): void {
-
     if (this.changePasswordForm.invalid) {
       this.changePasswordForm.markAllAsTouched();
       return;
     }
 
+    this.submitting = true;
+    this.errorMessage = '';
     const submitData = this.changePasswordForm.value;
 
-    this.axios.request(
-      "PUT",
-      "/account/change-password",
-      {
-        newPassword: submitData.password
-      }
-    ).then(response => {
-
-      this.axios.setAuthToken(response.data.token);
-      this.router.navigate(['products']);
-
-    }).catch(error => {
-
-      this.axios.setAuthToken(null);
-
-    });
+    this.axios.request('PUT', '/account/change-password', { newPassword: submitData.password })
+      .then(response => {
+        this.submitting = false;
+        this.axios.setAuthToken(response.data.token);
+        this.router.navigate(['products']);
+      })
+      .catch(error => {
+        this.submitting = false;
+        this.errorMessage = error?.response?.data?.message || 'Failed to change password. Please try again.';
+      });
   }
 
 }
