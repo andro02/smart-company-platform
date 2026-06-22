@@ -41,7 +41,6 @@ export class ManagerListComponent implements OnInit, OnDestroy {
   pageSize: number = 9;
   loading: boolean = false;
   errorMessage: string = '';
-  successMessage: string = '';
 
 
   private searchSubject = new Subject<string>();
@@ -49,15 +48,6 @@ export class ManagerListComponent implements OnInit, OnDestroy {
   constructor(private axios: AxiosService, private fileService: FileService, private router: Router) {}
 
   ngOnInit(): void {
-    const navigation = this.router.getCurrentNavigation();
-
-    if (navigation?.extras.state) {
-      this.successMessage = navigation.extras.state['successMessage'];
-    }
-
-    setTimeout(() => {
-      this.successMessage = '';
-    }, 3000);
     
     this.searchSubject.pipe(
       debounceTime(400),
