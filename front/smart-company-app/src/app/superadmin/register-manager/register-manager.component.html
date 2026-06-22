@@ -88,40 +88,26 @@
                     formControlName="file"
                     (change)="onFileSelected($event, fileLabel)"
                     [ngClass]="{
-                        'is-invalid': fileError,
-                        'is-valid': !fileError && registerForm.get('file')?.value
+                    'is-invalid': registerForm.get('file')?.invalid && formSubmitted && !selectedFile,
+                    'is-valid': !fileError && registerForm.get('file')?.value
                     }">
                 <label #fileLabel for="file" class="custom-file-label">Choose manager's profile picture</label>
-                <div *ngIf="(registerForm.get('file')?.invalid && formSubmitted) || fileError" class="text-danger small">
-                    This input is not valid!
+                <div *ngIf="registerForm.get('file')?.invalid && formSubmitted && !selectedFile" class="text-danger small">
+                    Profile picture is required.
                 </div>
                 <p class="text-danger small" *ngIf="fileError">{{ errorMessage }}</p>
             </div>
-            <!-- <div class="form-group">
-                <label for="signUpAs">Register As</label>
-                <select class="form-control" name="type" id="signUpAs" formControlName="type" required>
-                    <option name="asGuest" value="Guest">Guest</option>
-                    <option name="asOwner" value="Owner">Owner</option>
-                </select>
-                <div class="invalid-feedback">You have to choose a role!</div>
-            </div> -->
-            <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
+            <div *ngIf="successMessage" class="alert alert-success mt-3">
+                {{ successMessage }}
+            </div>
+
+            <div *ngIf="errorMessage && !fileError" class="alert alert-danger mt-3">
+                {{ errorMessage }}
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3" [disabled]="submitting">
+                <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
+                {{ submitting ? 'Registering...' : 'Register' }}
+            </button>
         </form>
-    </div>
-    <div *ngIf="errorMessage && !fileError"
-        style="position:fixed; bottom:24px; right:24px; z-index:9999;"
-        class="toast show align-items-center text-white bg-danger border-0">
-        <div class="d-flex">
-            <div class="toast-body">{{ errorMessage }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="errorMessage=''"></button>
-        </div>
-    </div>
-    <div *ngIf="successMessage" 
-        style="position:fixed; bottom:24px; right:24px; z-index:9999;"
-        class="toast show align-items-center text-white bg-success border-0">
-        <div class="d-flex">
-            <div class="toast-body">{{ successMessage }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="successMessage=''"></button>
-        </div>
     </div>
 </div>

@@ -16,6 +16,7 @@ import { passwordMatchValidator } from '../../common/validators/password-match.v
   styleUrl: './register-manager.component.css'
 })
 export class RegisterManagerComponent {
+  submitting: boolean = false;
 
   selectedFile: File | null = null;
   preSignedUrl: string = '';
@@ -91,7 +92,6 @@ export class RegisterManagerComponent {
   }
 
   onSubmit(): void {
-
     this.formSubmitted = true;
     this.registerForm.markAllAsTouched();
 
@@ -99,57 +99,70 @@ export class RegisterManagerComponent {
       return;
     }
 
+    this.submitting = true;
+    this.errorMessage = '';
+    this.fileError = false;
     const registerData = this.registerForm.value;
 
-    this.fileService.getUploadUrl(this.selectedFile.name, 'profile-images')
-      .subscribe({
-        next: (response) => {
+    // Prvo proveri username
+    this.axios.request('GET', `/users/check-username?username=${registerData.username}`, null)
+      .then(() => {
+        this.fileService.getUploadUrl(this.selectedFile!.name, 'profile-images')
+          .subscribe({
+            next: (response) => {
+              const res = JSON.parse(response);
+              this.fileService.uploadToS3(res.url, this.selectedFile!)
+                .subscribe({
+                  next: () => {
+                    const user = new User(
+                      registerData.username,
+                      registerData.password,
+                      UserType.Manager,
+                      true,
+                      true,
+                      registerData.email,
+                      res.filename
+                    );
 
-          const res = JSON.parse(response);
-
-          const headers = {
-            'Content-Type': this.selectedFile!.type
-          }
-
-          this.fileService.uploadToS3(res.url, this.selectedFile!)
-            .subscribe({
-              next: () => {
-
-                const user = new User(
-                  registerData.username,
-                  registerData.password,
-                  UserType.Manager,
-                  true,   // isActive nalog je odmah aktivan
-                  true,   // mustChangePassword mora promeniti pri prvoj prijavi
-                  registerData.email,
-                  res.filename
-                );
-
-                console.log(user);
-
-                this.axios.request('POST', '/register/manager', user)
-                  .then(res => {
-                    this.registerForm.reset();
-                    this.selectedFile = null;
-                    this.formSubmitted = false;
-                    this.errorMessage = '';
-
-                    this.router.navigate(['/managers'], {
-                      state: {
-                        successMessage: 'Manager registered successfully!'
-                      }
-                    });
-                  })
-                  .catch(err => {
-                    this.errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+                    this.axios.request('POST', '/register/manager', user)
+                      .then(() => {
+                        this.submitting = false;
+                        this.registerForm.reset();
+                        this.registerForm.markAsUntouched();
+                        this.registerForm.markAsPristine();
+                        this.selectedFile = null;
+                        this.formSubmitted = false;
+                        this.errorMessage = '';
+                        this.successMessage = 'Manager registered successfully!';
+                        setTimeout(() => {
+                          this.successMessage = '';
+                          this.router.navigate(['/managers']);
+                        }, 3000);
+                      })
+                      .catch(err => {
+                        this.submitting = false;
+                        this.errorMessage = err.response?.data?.message || 'Registration failed. Please try again.';
+                        setTimeout(() => this.errorMessage = '', 4000);
+                      });
+                  },
+                  error: () => {
+                    this.submitting = false;
+                    this.errorMessage = 'Image upload failed. Please try again.';
                     setTimeout(() => this.errorMessage = '', 4000);
-                  });
-
-              }
-            });
-
-        },
-        error: err => console.error(err)
+                  }
+                });
+            },
+            error: () => {
+              this.submitting = false;
+              this.errorMessage = 'Could not get upload URL. Please try again.';
+              setTimeout(() => this.errorMessage = '', 4000);
+            }
+          });
       })
+      .catch(() => {
+        this.submitting = false;
+        this.errorMessage = 'Username is already taken. Please choose another.';
+        setTimeout(() => this.errorMessage = '', 4000);
+      });
   }
 }
