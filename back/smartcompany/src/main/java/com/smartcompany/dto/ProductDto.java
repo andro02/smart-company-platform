@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,4 +20,5 @@ public class ProductDto {
     private boolean isForSale;
     private CategoryDto category;
     private Integer totalStock;
+    private List<FactorySummaryDto> factories;
 }

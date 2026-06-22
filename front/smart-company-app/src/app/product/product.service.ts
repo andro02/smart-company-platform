@@ -50,4 +50,8 @@ export class ProductService {
   createCategory(payload: { name: string; description: string }) {
     return this.axios.request('POST', this.categoriesBase, payload);
   }
+
+  getFactories() {
+    return this.axios.request('GET', `/factories?page=0&size=1000&sortBy=name&sortDir=asc`, null);
+  }
 }
