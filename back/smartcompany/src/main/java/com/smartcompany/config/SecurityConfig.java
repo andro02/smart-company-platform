@@ -35,8 +35,9 @@ public class SecurityConfig {
                     // Auth
                     .requestMatchers(HttpMethod.POST, "/login").permitAll()
                     .requestMatchers(HttpMethod.POST, "/register/customer").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/users/check-username").permitAll()
                     // Aktivacija
-                    .requestMatchers(HttpMethod.GET, "/activate/**").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/activate/**").permitAll()
                     // Fajlovi
                     .requestMatchers(HttpMethod.GET, "/api/files/presigned-url/get").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/api/files/presigned-url/put").permitAll()
