@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light mb-5" *ngIf="!axios.getMustChangePassword()">
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-5">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar"
         aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -6,14 +6,14 @@
 
     <div class="collapse navbar-collapse" id="navbar">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item active" *ngIf="axios.getRole() != null">
+            <li class="nav-item active" *ngIf="axios.getRole() != null && !axios.getMustChangePassword()">
               <a class="nav-link" [routerLink]="['products']">Products</a>
             </li>
             <app-manager-navbar
-                *ngIf="(axios.getRole() == 'Manager' || axios.getRole() == 'SuperAdmin') && axios.getIsActive() == true" class="navbar-nav">
+                *ngIf="(axios.getRole() == 'Manager' || axios.getRole() == 'SuperAdmin') && axios.getIsActive() == true && !axios.getMustChangePassword()" class="navbar-nav">
             </app-manager-navbar>
-            <app-superadmin-navbar *ngIf="axios.getRole() == 'SuperAdmin' && axios.getIsActive() == true" class="navbar-nav"></app-superadmin-navbar>
-            <app-customer-navbar *ngIf="axios.getRole() == 'Customer' && axios.getIsActive() == true" class="navbar-nav"></app-customer-navbar>
+            <app-superadmin-navbar *ngIf="axios.getRole() == 'SuperAdmin' && axios.getIsActive() == true && !axios.getMustChangePassword()" class="navbar-nav"></app-superadmin-navbar>
+            <app-customer-navbar *ngIf="axios.getRole() == 'Customer' && axios.getIsActive() == true && !axios.getMustChangePassword()" class="navbar-nav"></app-customer-navbar>
         </ul>
         <span>
             <ul class="navbar-nav ml-auto">
@@ -36,41 +36,3 @@
         </span>
     </div>
 </nav>
-
-<!-- <div *ngFor="let notification of notifications; index as i;">
-    <div class="modal fade" [attr.id]="'notification'+i" tabindex="-1" role="dialog" [attr.aria-labelledby]="'notificationLabel'+i" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" [attr.id]="'notificationLabel'+i">Notification</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" *ngIf="notification.type == 'ReservationCreated'">
-                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                    <p>New reservation from <a data-dismiss="modal" [routerLink]="['/profile/', notification.otherUserEmail]">{{notification.otherUserEmail}}</a>!</p>
-                </div>
-                <div class="modal-body" *ngIf="notification.type == 'ReservationCancelled'">
-                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                    <p>Reservation from <a data-dismiss="modal" [routerLink]="['/profile/', notification.otherUserEmail]">{{notification.otherUserEmail}}</a> was cancelled!</p>
-                </div>
-                <div class="modal-body" *ngIf="notification.type == 'OwnerReviewAdded'">
-                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                    <p><a data-dismiss="modal" [routerLink]="['/profile/', notification.otherUserEmail]">{{notification.otherUserEmail}}</a> reviewed you!</p>
-                </div>
-                <div class="modal-body" *ngIf="notification.type == 'AccommodationReviewAdded'">
-                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                    <p><a data-dismiss="modal" [routerLink]="['/profile/', notification.otherUserEmail]">{{notification.otherUserEmail}}</a> reviewed your accommodation!</p>
-                </div>
-                <div class="modal-body" *ngIf="notification.type == 'ReservationResponse'">
-                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                    <p><a data-dismiss="modal" [routerLink]="['/profile/', notification.otherUserEmail]">{{notification.otherUserEmail}}</a> responded to your reservation request!</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> -->
