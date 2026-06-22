@@ -3,11 +3,10 @@
         aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <!-- <a class="navbar-brand" [routerLink]="['']">Home</a> -->
 
     <div class="collapse navbar-collapse" id="navbar">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item active">
+            <li class="nav-item active" *ngIf="axios.getRole() != null">
               <a class="nav-link" [routerLink]="['products']">Products</a>
             </li>
             <app-manager-navbar
@@ -18,37 +17,6 @@
         </ul>
         <span>
             <ul class="navbar-nav ml-auto">
-                <!-- <li *ngIf="(axios.getRole() == 'Owner' || axios.getRole() == 'Guest') && notifications.length != 0" class="nav-item active"> 
-                    <div class="dropleft mt-1 mr-2">
-                        <button class="btn btn-outline-dark dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
-                            Notifications
-                        </button>
-                        <div class="dropdown-menu notificationsMenu">
-                            <div *ngFor="let notification of notifications; index as i;">
-                                <div *ngIf="notification.type == 'ReservationCreated'" class="dropdown-item" data-toggle="modal" [attr.data-target]="'#notification'+i">
-                                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                                    <p>New reservation from {{notification.otherUserEmail}}</p>
-                                </div>
-                                <div *ngIf="notification.type == 'ReservationCancelled'" class="dropdown-item" data-toggle="modal" [attr.data-target]="'#notification'+i">
-                                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                                    <p>Reservation from {{notification.otherUserEmail}} was cancelled</p>
-                                </div>
-                                <div *ngIf="notification.type == 'OwnerReviewAdded'" class="dropdown-item" data-toggle="modal" [attr.data-target]="'#notification'+i">
-                                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                                    <p>{{notification.otherUserEmail}} reviewed you</p>
-                                </div>
-                                <div *ngIf="notification.type == 'AccommodationReviewAdded'" class="dropdown-item" data-toggle="modal" [attr.data-target]="'#notification'+i">
-                                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                                    <p>{{notification.otherUserEmail}} reviewed your accommodation</p>
-                                </div>
-                                <div *ngIf="notification.type == 'ReservationResponse'" class="dropdown-item" data-toggle="modal" [attr.data-target]="'#notification'+i">
-                                    <p class="notificationTime">{{datePipe.transform(notification.createdAt, "d.M.yy h:mm a")}}</p>
-                                    <p>{{notification.otherUserEmail}} responded to your reservation request</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </li> -->
                 <li *ngIf="preSignedUrl != null" class="d-flex justify-content-center align-items-center nav-item active mr-2">
                     <img [src]="preSignedUrl" alt="Fetched Image" (error)="fetchImage()" class="rounded-circle article-img image"/>
                 </li>
