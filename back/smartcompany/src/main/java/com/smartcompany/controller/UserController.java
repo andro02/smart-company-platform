@@ -92,14 +92,17 @@ public class UserController {
     @Operation(summary = "Registracija kupca")
     @PostMapping("/register/customer")
     public ResponseEntity<UserDto> register(@RequestBody @Valid SignUpDto user) {
-        UserDto createdUser;
-        try {
-            createdUser = userService.registerCustomer(user);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        UserDto createdUser = userService.registerCustomer(user);
         createdUser.setToken(userAuthenticationProvider.createToken(createdUser));
         return ResponseEntity.created(URI.create("/api/users/" + createdUser.getUsername())).body(createdUser);
+    }
+
+    @GetMapping("/users/check-username")
+    public ResponseEntity<Void> checkUsername(@RequestParam String username) {
+        if (userService.isUsernameTaken(username)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "Registracija menadžera, samo SuperAdmin")

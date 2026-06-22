@@ -47,20 +47,20 @@ public class UserService {
 
     public UserDto login(CredentialsDto credentialsDto) {
         User user = userRepository.findByUsername(credentialsDto.username())
-                .orElseThrow(() -> new AppException("Nepoznat korisnik", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
         if (!passwordEncoder.matches(CharBuffer.wrap(credentialsDto.password()), user.getPassword())) {
-            throw new AppException("Pogrešna lozinka", HttpStatus.BAD_REQUEST);
+            throw new AppException("Incorrect password", HttpStatus.BAD_REQUEST);
         }
 
         // isActive=false za menadžere/superadmin znači blokiran
         // isActive=false za kupce znači neaktiviran nalog
         if (!user.isActive() && user.getType() != UserType.Customer) {
-            throw new AppException("Nalog je blokiran", HttpStatus.FORBIDDEN);
+            throw new AppException("Account is blocked", HttpStatus.FORBIDDEN);
         }
 
         if (!user.isActive() && user.getType() == UserType.Customer) {
-            throw new AppException("Nalog nije aktiviran", HttpStatus.FORBIDDEN);
+            throw new AppException("Account is not activated. Please check your email.", HttpStatus.FORBIDDEN);
         }
 
         return toUserDto(user);
@@ -68,7 +68,7 @@ public class UserService {
 
     public UserDto registerCustomer(SignUpDto userDto) {
         if (userRepository.findByUsername(userDto.username()).isPresent()) {
-            throw new AppException("Korisničko ime već postoji", HttpStatus.BAD_REQUEST);
+            throw new AppException("Username already taken", HttpStatus.BAD_REQUEST);
         }
 
         User user = signUpToUser(userDto);
@@ -87,7 +87,7 @@ public class UserService {
 
     public UserDto registerManager(SignUpDto userDto) {
         if (userRepository.findByUsername(userDto.username()).isPresent()) {
-            throw new AppException("Korisničko ime već postoji", HttpStatus.BAD_REQUEST);
+            throw new AppException("Username already taken", HttpStatus.BAD_REQUEST);
         }
 
         User user = signUpToUser(userDto);
@@ -101,7 +101,7 @@ public class UserService {
 
     public UserDto registerSuperAdmin(SignUpDto userDto) {
         if (userRepository.findByUsername(userDto.username()).isPresent()) {
-            throw new AppException("Korisničko ime već postoji", HttpStatus.BAD_REQUEST);
+            throw new AppException("Username already taken", HttpStatus.BAD_REQUEST);
         }
 
         User user = signUpToUser(userDto);
@@ -115,9 +115,9 @@ public class UserService {
 
     public UserDto blockManager(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
         if (user.getType() == UserType.SuperAdmin) {
-            throw new AppException("Ne možete blokirati superadmina", HttpStatus.FORBIDDEN);
+            throw new AppException("You cannot block a super admin", HttpStatus.FORBIDDEN);
         }
         user.setActive(false);
         return toUserDto(userRepository.save(user));
@@ -125,7 +125,7 @@ public class UserService {
 
     public UserDto unblockManager(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
         user.setActive(true);
         return toUserDto(userRepository.save(user));
     }
@@ -134,7 +134,7 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDto loggedUser = (UserDto) authentication.getPrincipal();
         User user = userRepository.findByUsername(loggedUser.getUsername())
-                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
         user.setPassword(passwordEncoder.encode(dto.newPassword()));
         user.setMustChangePassword(false);
@@ -144,7 +144,7 @@ public class UserService {
 
     public UserDto update(SignUpDto signUpDto, String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
         User updated = signUpToUser(signUpDto);
         updated.setUsername(username);
@@ -165,8 +165,12 @@ public class UserService {
 
     public UserDto findByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
         return toUserDto(user);
+}
+
+    public boolean isUsernameTaken(String username) {
+        return userRepository.findByUsername(username).isPresent();
     }
 
     public boolean validateActivationToken(String username, String token) {
