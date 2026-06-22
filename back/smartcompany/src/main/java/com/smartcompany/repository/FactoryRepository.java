@@ -4,6 +4,7 @@ import com.smartcompany.model.Factory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,4 +15,7 @@ public interface FactoryRepository extends JpaRepository<Factory, Long>, JpaSpec
     // koristi @Scheduled heartbeat checker
     @Query("SELECT f FROM Factory f WHERE f.isOnline = true AND (f.lastHeartbeat IS NULL OR f.lastHeartbeat < :cutoff)")
     List<Factory> findStaleOnlineFactories(Instant cutoff);
+
+    @Query("SELECT f FROM Factory f JOIN f.products p WHERE p.id = :productId")
+    List<Factory> findByProductId(@Param("productId") Long productId);
 }

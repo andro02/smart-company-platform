@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record ProductRequestDto(
     @NotBlank String name,
@@ -13,5 +14,6 @@ public record ProductRequestDto(
     @NotNull @Positive Double weight,
     String image,
     boolean isForSale,
-    @NotNull Long categoryId
+    @NotNull Long categoryId,
+    List<Long> factoryIds
 ) {}

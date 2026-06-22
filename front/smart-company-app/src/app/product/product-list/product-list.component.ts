@@ -7,7 +7,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProductService } from '../product.service';
 import { FileService } from '../../file.service';
 import { AxiosService } from '../../auth/axios.service';
-import { Product, Category, ProductSearchParams } from '../product.model';
+import { Product, Category, ProductSearchParams, FactorySummary } from '../product.model';
 import { UserType } from '../../auth/model/user';
 
 @Component({
@@ -42,6 +42,23 @@ export class ProductListComponent implements OnInit, OnDestroy {
   deleteError = '';
 
   private searchSubject = new Subject<string>();
+
+  expandedFactories: Map<number, FactorySummary[]> = new Map();
+  loadingFactoriesFor: number | null = null;
+
+  toggleFactories(productId: number): void {
+    if (this.expandedFactories.has(productId)) {
+      this.expandedFactories.delete(productId);
+      return;
+    }
+
+    this.loadingFactoriesFor = productId;
+    this.productService.getById(productId).then((res: any) => {
+      this.expandedFactories.set(productId, res.data.factories ?? []);
+    }).finally(() => {
+      this.loadingFactoriesFor = null;
+    });
+  }
 
   constructor(
     private productService: ProductService,
