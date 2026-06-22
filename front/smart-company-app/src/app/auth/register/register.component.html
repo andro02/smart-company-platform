@@ -83,16 +83,27 @@
                     formControlName="file"
                     (change)="onFileSelected($event, fileLabel)"
                     [ngClass]="{
-                        'is-invalid': fileError,
-                        'is-valid': !fileError && registerForm.get('file')?.value
+                    'is-invalid': registerForm.get('file')?.invalid && formSubmitted && !selectedFile,
+                    'is-valid': !fileError && registerForm.get('file')?.value
                     }">
                 <label #fileLabel for="file" class="custom-file-label">Choose your profile picture</label>
-                <div *ngIf="(registerForm.get('file')?.invalid && formSubmitted) || fileError" class="text-danger small">
-                    This input is not valid!
+                <div *ngIf="registerForm.get('file')?.invalid && formSubmitted && !selectedFile" class="text-danger small">
+                    Profile picture is required.
                 </div>
-                <p class="text-danger small" *ngIf="fileError">{{ errorMessage }}</p>
             </div>
-            <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
+
+            <div *ngIf="successMessage" class="alert alert-success mt-3">
+            {{ successMessage }}
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+            {{ errorMessage }}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3" [disabled]="submitting">
+                <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
+                {{ submitting ? 'Registering...' : 'Register' }}
+            </button>
         </form>
     </div>
 </div>

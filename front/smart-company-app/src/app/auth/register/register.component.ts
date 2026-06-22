@@ -23,6 +23,9 @@ export class RegisterComponent {
   fileError: boolean = false;
   errorMessage: string = '';
 
+  submitting: boolean = false;
+  successMessage: string = '';
+
   formSubmitted: boolean = false;
 
   registerForm: FormGroup;
@@ -87,7 +90,6 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
-
     this.formSubmitted = true;
     this.registerForm.markAllAsTouched();
 
@@ -95,49 +97,58 @@ export class RegisterComponent {
       return;
     }
 
+    this.submitting = true;
+    this.errorMessage = '';
+    this.fileError = false;
     const data = this.registerForm.value;
 
-    this.fileService.getUploadUrl(this.selectedFile.name, 'profile-images')
-      .subscribe({
-        next: (response) => {
-
-          const res = JSON.parse(response);
-
-          const headers = {
-            'Content-Type': this.selectedFile!.type
-          };
-
-          // Upload fajla na S3
-          this.fileService.uploadToS3(res.url, this.selectedFile!)
-            .subscribe({
-              next: () => {
-
-                const user = new User(
-                  data.username,
-                  data.password,
-                  UserType.Customer,
-                  false,   // isActive aktivira se emailom
-                  false,   // mustChangePassword
-                  data.email,
-                  res.filename
-                );
-
-                this.axios.request('POST', '/register/customer', user)
-                  .then(res => {
-                    this.axios.setAuthToken(res.data.token);
-                    this.router.navigate(['']);
-                  })
-                  .catch(err => {
-                    console.error(err);
-                    this.axios.setAuthToken(null);
-                  });
-
-              },
-              error: err => console.error(err)
-            });
-
-        },
-        error: err => console.error(err)
+    // 1. Prvo proveri username
+    this.axios.request('GET', `/users/check-username?username=${data.username}`, null)
+      .then(() => {
+        // 2. Username slobodan — uploaduj sliku
+        this.fileService.getUploadUrl(this.selectedFile!.name, 'profile-images')
+          .subscribe({
+            next: (response) => {
+              const res = JSON.parse(response);
+              this.fileService.uploadToS3(res.url, this.selectedFile!)
+                .subscribe({
+                  next: () => {
+                    const user = new User(
+                      data.username, data.password, UserType.Customer,
+                      false, false, data.email, res.filename
+                    );
+                    this.axios.request('POST', '/register/customer', user)
+                      .then(() => {
+                        this.submitting = false;
+                        this.successMessage = 'Registration successful! Please check your email to activate your account.';
+                        this.registerForm.reset();
+                        this.registerForm.markAsUntouched();
+                        this.registerForm.markAsPristine();
+                        this.formSubmitted = false;
+                        this.selectedFile = null;
+                        setTimeout(() => this.router.navigate(['login']), 3000);
+                      })
+                      .catch(err => {
+                        this.submitting = false;
+                        this.errorMessage = err?.response?.data?.message || 'Registration failed. Please try again.';
+                      });
+                  },
+                  error: () => {
+                    this.submitting = false;
+                    this.errorMessage = 'Image upload failed. Please try again.';
+                  }
+                });
+            },
+            error: () => {
+              this.submitting = false;
+              this.errorMessage = 'Could not get upload URL. Please try again.';
+            }
+          });
+      })
+      .catch(() => {
+        // Username zauzet
+        this.submitting = false;
+        this.errorMessage = 'Username is already taken. Please choose another.';
       });
   }
 }
