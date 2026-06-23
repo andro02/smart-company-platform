@@ -147,8 +147,6 @@ export class FactoryListComponent implements OnInit, OnDestroy {
     const cur = this.currentPage;
     const last = total - 1;
     
-    console.log('total:', total, 'cur:', cur, 'last:', last);
-    
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i);
     }
@@ -157,8 +155,6 @@ export class FactoryListComponent implements OnInit, OnDestroy {
     const mid = Math.max(2, Math.min(last - 2, cur));
     const lo = Math.max(2, mid - 1);
     const hi = Math.min(last - 2, mid + 1);
-
-    console.log('lo:', lo, 'hi:', hi, 'last-2:', last-2);
     
     if (lo > 2) result.push('...');
     for (let i = lo; i <= hi; i++) result.push(i);
@@ -166,7 +162,6 @@ export class FactoryListComponent implements OnInit, OnDestroy {
 
     result.push(last - 1, last);
     
-    console.log('result:', result);
     return result;
   }
 
@@ -182,12 +177,24 @@ export class FactoryListComponent implements OnInit, OnDestroy {
     this.loadFactories();
   }
 
+  confirmDeleteId: number | null = null;
+
   deleteFactory(id: number): void {
-    if (!confirm('Are you sure you want to delete this factory?')) return;
-    this.factoryService.delete(id).then(() => {
+    this.confirmDeleteId = id;
+  }
+
+  confirmDelete(): void {
+    if (this.confirmDeleteId === null) return;
+    this.factoryService.delete(this.confirmDeleteId).then(() => {
+      this.confirmDeleteId = null;
       this.loadFactories();
     }).catch(() => {
+      this.confirmDeleteId = null;
       this.deleteError = 'Failed to delete factory.';
     });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
   }
 }

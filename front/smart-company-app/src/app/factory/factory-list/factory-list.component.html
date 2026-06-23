@@ -14,15 +14,15 @@
       <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
 
         <div class="d-flex flex-wrap gap-2 align-items-center">
-          <input type="text" class="form-control filter-input" placeholder="🔍  Search by name..."
+          <input type="text" class="form-control filter-input mr-2" placeholder="🔍  Search by name..."
                 [(ngModel)]="searchText" (input)="onSearchInput()">
 
-          <select class="form-select filter-select" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
+          <select class="form-select filter-select mr-2" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
             <option [ngValue]="null">All countries</option>
             <option *ngFor="let c of countries" [ngValue]="c.id">{{ c.name }}</option>
           </select>
 
-          <select class="form-select filter-select" [(ngModel)]="selectedCityId" (change)="onFilterChange()"
+          <select class="form-select filter-select mr-2" [(ngModel)]="selectedCityId" (change)="onFilterChange()"
                   [disabled]="!selectedCountryId">
             <option [ngValue]="null">All cities</option>
             <option *ngFor="let c of cities" [ngValue]="c.id">{{ c.name }}</option>
@@ -49,7 +49,9 @@
   <!-- Error -->
   <div *ngIf="deleteError" class="alert alert-danger alert-dismissible">
     {{ deleteError }}
-    <button type="button" class="btn-close" (click)="deleteError=''"></button>
+    <button type="button" class="close" (click)="deleteError=''">
+      <span aria-hidden="true">&times;</span>
+    </button>
   </div>
 
   <!-- Results info -->
@@ -94,15 +96,23 @@
         </div>
 
         <div class="card-footer bg-transparent d-flex gap-2">
-            <a [routerLink]="['/factories', factory.id]" class="btn btn-outline-primary btn-sm flex-fill">
-                View
-            </a>
-            <a [routerLink]="['/factories/edit', factory.id]" class="btn btn-outline-secondary btn-sm flex-fill">
-                Edit
-            </a>
-            <button class="btn btn-outline-danger btn-sm flex-fill" (click)="deleteFactory(factory.id)">
-                Delete
+          <a [routerLink]="['/factories', factory.id]" class="btn btn-outline-primary btn-sm flex-fill mr-1">
+            View
+          </a>
+          <a [routerLink]="['/factories/edit', factory.id]" class="btn btn-outline-secondary btn-sm flex-fill mx-1">
+            Edit
+          </a>
+
+          <ng-container *ngIf="confirmDeleteId !== factory.id">
+            <button class="btn btn-outline-danger btn-sm flex-fill ml-1" (click)="deleteFactory(factory.id)">
+              Delete
             </button>
+          </ng-container>
+
+          <ng-container *ngIf="confirmDeleteId === factory.id">
+            <button class="btn btn-danger btn-sm flex-fill mx-1" (click)="confirmDelete()">Yes</button>
+            <button class="btn btn-outline-secondary btn-sm flex-fill ml-1" (click)="cancelDelete()">No</button>
+          </ng-container>
         </div>
 
       </div>
