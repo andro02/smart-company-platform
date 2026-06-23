@@ -50,6 +50,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/categories/**").permitAll()
                     .requestMatchers(HttpMethod.GET,  "/api/orders/my-companies").hasRole("Customer")
                     .requestMatchers(HttpMethod.GET,  "/api/orders/products").hasRole("Customer")
+                    .requestMatchers(HttpMethod.GET, "/api/orders/categories").hasRole("Customer")
                     .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("Customer")
                     // Menadzeri samo SuperAdmin (dodatno osigurano @PreAuthorize)
                     .requestMatchers(HttpMethod.GET, "/users/managers").hasRole("SuperAdmin")
