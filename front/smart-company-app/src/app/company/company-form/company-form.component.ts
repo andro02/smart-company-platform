@@ -247,7 +247,7 @@ export class CompanyFormComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.companyService.create(payload).then(() => {
-      this.router.navigate(['/companies']);
+      this.router.navigate(['/products']);
     }).catch((err: any) => {
       this.error = err?.response?.data?.message || 'An error occurred.';
     }).finally(() => this.loading = false);
