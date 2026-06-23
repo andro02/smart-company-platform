@@ -20,6 +20,7 @@ type DistancePeriod = 'WEEK' | 'MONTH' | 'THREE_MONTHS' | 'SIX_MONTHS' | 'YEAR' 
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './vehicle-detail.component.html',
+  styleUrl: './vehicle-detail.component.css'
 })
 export class VehicleDetailComponent implements OnInit, OnDestroy {
 
