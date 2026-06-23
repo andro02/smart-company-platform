@@ -15,10 +15,6 @@ import com.smartcompany.specification.ProductSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
-import com.smartcompany.dto.FactorySummaryDto;
-import com.smartcompany.model.Factory;
-import com.smartcompany.repository.FactoryRepository;
 import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -73,10 +69,6 @@ public class ProductService {
 
         Product saved = productRepository.save(product);
 
-        if (dto.factoryIds() != null) {
-            updateFactoryAssociations(saved, dto.factoryIds());
-        }
-
         return toDto(saved);
     }
 
@@ -98,32 +90,7 @@ public class ProductService {
 
         Product saved = productRepository.save(product);
 
-        if (dto.factoryIds() != null) {
-            updateFactoryAssociations(saved, dto.factoryIds());
-        }
-
         return toDto(saved);
-    }
-
-    private void updateFactoryAssociations(Product product, List<Long> factoryIds) {
-        // Skini proizvod sa fabrika koje ga vise ne proizvode
-        List<Factory> currentFactories = factoryRepository.findByProductId(product.getId());
-        for (Factory f : currentFactories) {
-            if (!factoryIds.contains(f.getId())) {
-                f.getProducts().removeIf(p -> p.getId().equals(product.getId()));
-                factoryRepository.save(f);
-            }
-        }
-
-        // Dodaj proizvod na nove fabrike
-        List<Factory> newFactories = factoryRepository.findAllById(factoryIds);
-        for (Factory f : newFactories) {
-            boolean alreadyLinked = f.getProducts().stream().anyMatch(p -> p.getId().equals(product.getId()));
-            if (!alreadyLinked) {
-                f.getProducts().add(product);
-                factoryRepository.save(f);
-            }
-        }
     }
 
     @Transactional
