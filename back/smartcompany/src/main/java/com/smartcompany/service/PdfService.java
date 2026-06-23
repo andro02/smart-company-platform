@@ -10,8 +10,12 @@ import com.itextpdf.layout.properties.UnitValue;
 import com.smartcompany.model.order.Order;
 import com.smartcompany.model.order.OrderItem;
 import org.springframework.stereotype.Service;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.io.font.constants.StandardFonts;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -22,11 +26,18 @@ public class PdfService {
         DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.of("Europe/Belgrade"));
 
     public byte[] generateInvoice(Order order) {
+        PdfFont font = null;
+        try {
+            font = PdfFontFactory.createFont(StandardFonts.HELVETICA, "Cp1250", com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         PdfWriter writer = new PdfWriter(out);
         PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
+        Document document = new Document(pdf);        
+        document.setFont(font);
 
         // Naslov
         document.add(new Paragraph("FAKTURA #" + order.getId())
