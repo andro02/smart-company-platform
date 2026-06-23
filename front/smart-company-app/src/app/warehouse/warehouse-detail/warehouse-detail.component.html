@@ -12,8 +12,8 @@
       <a routerLink="/warehouses" class="back-link">← Back to warehouses</a>
       <div class="header-row">
         <div>
-          <h1 class="factory-name">{{ warehouse.name }}</h1>
-          <p class="factory-address">{{ warehouse.address }}, {{ warehouse.city.name }}, {{ warehouse.country.name }}</p>
+          <h1 class="warehouse-name">{{ warehouse.name }}</h1>
+          <p class="warehouse-address">{{ warehouse.address }}, {{ warehouse.city.name }}, {{ warehouse.country.name }}</p>
         </div>
         <div class="online-badge" [class.online]="warehouse.isOnline" [class.offline]="!warehouse.isOnline">
           <span class="badge-dot"></span>

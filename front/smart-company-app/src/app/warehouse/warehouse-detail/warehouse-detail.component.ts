@@ -20,6 +20,7 @@ type TemperaturePeriod = 'WEEK' | 'MONTH' | 'THREE_MONTHS' | 'SIX_MONTHS' | 'YEA
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './warehouse-detail.component.html',
+  styleUrl: './warehouse-detail.component.css'
 })
 export class WarehouseDetailComponent implements OnInit, OnDestroy {
 
