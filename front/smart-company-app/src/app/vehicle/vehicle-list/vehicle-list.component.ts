@@ -12,6 +12,7 @@ import { Vehicle, VehicleBrand, VehicleSearchParams } from '../vehicle.model';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './vehicle-list.component.html',
+  styleUrl: './vehicle-list.component.css'
 })
 export class VehicleListComponent implements OnInit, OnDestroy {
 
@@ -150,12 +151,24 @@ export class VehicleListComponent implements OnInit, OnDestroy {
     this.loadVehicles();
   }
 
+  confirmDeleteId: number | null = null;
+
   deleteVehicle(id: number): void {
-    if (!confirm('Are you sure you want to delete this vehicle?')) return;
-    this.vehicleService.delete(id).then(() => {
+    this.confirmDeleteId = id;
+  }
+
+  confirmDelete(): void {
+    if (this.confirmDeleteId === null) return;
+    this.vehicleService.delete(this.confirmDeleteId).then(() => {
+      this.confirmDeleteId = null;
       this.loadVehicles();
     }).catch(() => {
+      this.confirmDeleteId = null;
       this.deleteError = 'Failed to delete vehicle.';
     });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
   }
 }
