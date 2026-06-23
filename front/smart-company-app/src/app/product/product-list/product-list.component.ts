@@ -163,13 +163,25 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.loadProducts();
   }
 
+  confirmDeleteId: number | null = null;
+
   deleteProduct(id: number): void {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-    this.productService.delete(id).then(() => {
+    this.confirmDeleteId = id;
+  }
+
+  confirmDelete(): void {
+    if (this.confirmDeleteId === null) return;
+    this.productService.delete(this.confirmDeleteId).then(() => {
+      this.confirmDeleteId = null;
       this.loadProducts();
     }).catch(() => {
+      this.confirmDeleteId = null;
       this.deleteError = 'Failed to delete product.';
     });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
   }
 
   isManager(): boolean {

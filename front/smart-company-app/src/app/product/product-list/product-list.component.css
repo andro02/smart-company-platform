@@ -2,7 +2,7 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .card:hover {
-  transform: translateY(-3px);
+  /* transform: translateY(-3px); */
   box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important;
 }
 .card-img-top {
@@ -58,11 +58,21 @@
 }
 
 .card.mb-4 .card-body {
-  padding: 1.25rem 1.5rem 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
+  gap: 1rem;
 }
 
 .border-top {
   border-color: #f0f0f0 !important;
   padding-top: 0.75rem;
   margin-top: 0.25rem;
+}
+
+.row.g-4 {
+  --bs-gutter-y: 1.5rem;
+}
+
+.d-flex.flex-wrap.gap-2.align-items-center.mb-3 {
+  gap: 0.75rem !important;
+  padding-bottom: 0.75rem;
 }
