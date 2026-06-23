@@ -44,7 +44,7 @@
           + New category
         </button>
       </div>
-      <select class="form-select" formControlName="categoryId"
+      <select class="form-control" formControlName="categoryId"
         [ngClass]="{ 'is-invalid': isInvalid('categoryId'), 'is-valid': form.get('categoryId')?.valid && form.get('categoryId')?.touched }">
         <option [ngValue]="null" disabled>Select a category</option>
         <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
@@ -58,49 +58,44 @@
       <label class="form-check-label" for="isForSale">Available for sale</label>
     </div>
 
-    <!-- Factories -->
-    <div class="mb-4">
-      <label class="form-label fw-semibold">Manufactured in factories</label>
-      <p class="text-muted small mb-2">Select factories that produce this product (optional).</p>
-      <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-        <div class="form-check" *ngFor="let factory of factories">
-          <input
-            type="checkbox"
-            class="form-check-input"
-            [id]="'factory-' + factory.id"
-            [checked]="isFactorySelected(factory.id)"
-            (change)="toggleFactory(factory.id)">
-          <label class="form-check-label" [for]="'factory-' + factory.id">
-            {{ factory.name }}
-          </label>
-        </div>
-        <div *ngIf="factories.length === 0" class="text-muted small">No factories available.</div>
-      </div>
-    </div>
-
     <!-- Image -->
     <div class="mb-4">
       <label class="form-label fw-semibold">
         Product image {{ isEditMode ? '(leave empty to keep current)' : '*' }}
       </label>
       <div *ngIf="imagePreviewUrl" class="mb-2">
-        <img [src]="imagePreviewUrl" alt="Product image" style="max-height: 160px; border-radius: 8px; object-fit: cover;">
+        <img [src]="imagePreviewUrl" alt="Product image" 
+            style="max-height: 160px; border-radius: 8px; object-fit: cover;">
       </div>
-      <input type="file" class="form-control" formControlName="file"
-        (change)="onFileSelected($event)"
-        accept="image/jpeg,image/png,image/gif,image/webp"
-        [ngClass]="{ 'is-invalid': (isInvalid('file') && !isEditMode) || !!fileError }">
-      <div class="invalid-feedback" *ngIf="!fileError">Image is required.</div>
-      <div class="text-danger small mt-1" *ngIf="fileError">{{ fileError }}</div>
+      <div class="custom-file">
+        <input
+          type="file"
+          class="form-control"
+          id="productFile"
+          formControlName="file"
+          (change)="onFileSelected($event)"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          [ngClass]="{
+            'is-invalid': (isInvalid('file') && !isEditMode && !selectedFile) || !!fileError,
+            'is-valid': !fileError && !!selectedFile
+          }">
+        <label for="productFile" class="custom-file-label">
+          {{ selectedFile ? selectedFile.name : 'Choose product image' }}
+        </label>
+        <div *ngIf="isInvalid('file') && !isEditMode && !selectedFile" class="text-danger small mt-1">
+          Image is required.
+        </div>
+        <div *ngIf="fileError" class="text-danger small mt-1">{{ fileError }}</div>
+      </div>
     </div>
 
     <!-- Actions -->
-    <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary" [disabled]="submitting">
+    <div class="d-flex mt-4">
+      <button type="submit" class="btn btn-primary w-50 mr-2" [disabled]="submitting">
         <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
         {{ isEditMode ? 'Save changes' : 'Create product' }}
       </button>
-      <a routerLink="/products" class="btn btn-outline-secondary">Cancel</a>
+      <a routerLink="/products" class="btn btn-outline-secondary w-50 ml-2">Cancel</a>
     </div>
 
   </form>
@@ -130,8 +125,8 @@
         <label class="form-label fw-semibold">Description</label>
         <input type="text" class="form-control" formControlName="description" placeholder="Optional">
       </div>
-      <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary" [disabled]="categorySubmitting">
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary mr-2" [disabled]="categorySubmitting">
           <span *ngIf="categorySubmitting" class="spinner-border spinner-border-sm me-1"></span>
           Create
         </button>
