@@ -11,6 +11,7 @@ import { CompanyRequestSummary, Page } from '../company.model';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './company-request-list.component.html',
+  styleUrl: './company-request-list.component.css'
 })
 export class CompanyRequestListComponent implements OnInit, OnDestroy {
 
