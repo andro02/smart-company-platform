@@ -1,9 +1,6 @@
 <div class="container py-4" style="max-width: 860px;">
 
-  <div class="d-flex align-items-center mb-4 gap-3">
-    <a routerLink="/warehouses" class="btn btn-outline-secondary btn-sm">← Back</a>
-    <h2 class="mb-0">{{ isEditMode ? 'Edit Warehouse' : 'New Warehouse' }}</h2>
-  </div>
+  <h2 class="mb-4">{{ isEditMode ? 'Edit Warehouse' : 'New Warehouse' }}</h2>
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -25,14 +22,14 @@
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <label class="form-label">Country <span class="text-danger">*</span></label>
-          <select class="form-select" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
+          <select class="form-control" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
             <option [ngValue]="null">Select country...</option>
             <option *ngFor="let c of countries" [ngValue]="c.id">{{ c.name }}</option>
           </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">City <span class="text-danger">*</span></label>
-          <select class="form-select" [(ngModel)]="selectedCityId" [disabled]="!selectedCountryId" (change)="onCityChange()">
+          <select class="form-control" [(ngModel)]="selectedCityId" [disabled]="!selectedCountryId" (change)="onCityChange()">
             <option [ngValue]="null">Select city...</option>
             <option *ngFor="let c of cities" [ngValue]="c.id">{{ c.name }}</option>
           </select>
@@ -61,14 +58,21 @@
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <h5 class="card-title">Images</h5>
-      <input type="file" class="form-control mb-3" accept="image/*" multiple
-             (change)="onImagesSelected($event)">
-      <div *ngIf="uploadingImages" class="text-muted small mb-2">Uploading images...</div>
-      <div class="d-flex flex-wrap gap-2">
-        <div *ngFor="let url of imageUrls; let i = index" class="position-relative">
+      <div class="custom-file mb-3">
+        <input type="file" class="form-control" id="warehouseImages"
+               accept="image/*" multiple (change)="onImagesSelected($event)">
+        <label for="warehouseImages" class="custom-file-label">Choose warehouse images</label>
+      </div>
+      <div *ngIf="uploadingImages" class="text-muted small mb-2">
+        <span class="spinner-border spinner-border-sm mr-1"></span> Uploading images...
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <div *ngFor="let url of imageUrls; let i = index"
+             style="position:relative;width:100px;height:100px;">
           <img [src]="url" style="width:100px;height:100px;object-fit:cover;border-radius:6px;">
-          <button class="btn btn-danger btn-sm position-absolute top-0 end-0"
-                  style="padding:2px 6px;font-size:11px;" (click)="removeImage(i)">✕</button>
+          <button class="btn btn-danger btn-sm"
+                  style="position:absolute;top:4px;right:4px;padding:2px 6px;font-size:11px;"
+                  (click)="removeImage(i)">✕</button>
         </div>
       </div>
     </div>
@@ -86,19 +90,24 @@
       <div *ngFor="let sector of sectors; let i = index" class="d-flex gap-2 mb-2">
         <input type="text" class="form-control" [(ngModel)]="sector.name"
                [placeholder]="'Sector ' + (i + 1) + ' name'">
-        <button class="btn btn-outline-danger btn-sm" (click)="removeSector(i)">✕</button>
+        <button class="btn btn-outline-danger btn-sm ml-2" (click)="removeSector(i)">✕</button>
       </div>
     </div>
   </div>
 
-  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="error" class="alert alert-danger alert-dismissible">
+    {{ error }}
+    <button type="button" class="close" (click)="error = ''">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
 
-  <div class="d-flex gap-2">
-    <button class="btn btn-primary px-4" (click)="submit()" [disabled]="loading || uploadingImages">
-      <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+  <div class="d-flex mt-2">
+    <button class="btn btn-primary w-50 mr-2" (click)="submit()" [disabled]="loading || uploadingImages">
+      <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
       {{ isEditMode ? 'Save Changes' : 'Create Warehouse' }}
     </button>
-    <a routerLink="/warehouses" class="btn btn-outline-secondary">Cancel</a>
+    <a routerLink="/warehouses" class="btn btn-outline-secondary w-50 ml-2 text-center">Cancel</a>
   </div>
 
 </div>
