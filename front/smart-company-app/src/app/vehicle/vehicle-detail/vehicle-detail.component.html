@@ -12,8 +12,8 @@
       <a routerLink="/vehicles" class="back-link">← Back to vehicles</a>
       <div class="header-row">
         <div>
-          <h1 class="factory-name">{{ vehicle.licensePlate }}</h1>
-          <p class="factory-address">{{ vehicle.brand.name }} {{ vehicle.model.name }}</p>
+          <h1 class="vehicle-name">{{ vehicle.licensePlate }}</h1>
+          <p class="vehicle-address">{{ vehicle.brand.name }} {{ vehicle.model.name }}</p>
         </div>
         <div class="online-badge" [class.online]="vehicle.isOnline" [class.offline]="!vehicle.isOnline">
           <span class="badge-dot"></span>
