@@ -3,8 +3,10 @@ package com.smartcompany.controller.order;
 import com.smartcompany.dto.company.CompanyDto;
 import com.smartcompany.dto.order.CreateOrderDto;
 import com.smartcompany.dto.order.OrderResponseDto;
+import com.smartcompany.dto.CategoryDto;
 import com.smartcompany.dto.ProductDto;
 import com.smartcompany.dto.UserDto;
+import com.smartcompany.service.CategoryService;
 import com.smartcompany.service.ProductService;
 import com.smartcompany.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ public class OrderController {
 
     private final OrderService orderService;
     private final ProductService productService;
+    private final CategoryService categoryService;
 
     // Moje firme (za dropdown u formi)
     @GetMapping("/my-companies")
@@ -40,10 +43,23 @@ public class OrderController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice) {
 
-        var pageable = PageRequest.of(page, size, Sort.by("name").ascending());
-        return ResponseEntity.ok(productService.search(name, categoryId, true, null, null, pageable));
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+            ? Sort.by(sortBy).descending()
+            : Sort.by(sortBy).ascending();
+        var pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(productService.search(name, categoryId, true, minPrice, maxPrice, pageable));
+    }
+
+    @GetMapping("/categories")
+    @PreAuthorize("hasRole('Customer')")
+    public ResponseEntity<List<CategoryDto>> getCategories() {
+        return ResponseEntity.ok(categoryService.getAll());
     }
 
     // Kreiranje porudžbine
