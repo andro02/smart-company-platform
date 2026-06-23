@@ -14,12 +14,12 @@
           <input type="text" class="form-control filter-input" placeholder="🔍  Search by name..."
                  [(ngModel)]="searchText" (input)="onSearchInput()">
 
-          <select class="form-select filter-select" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
+          <select class="form-select filter-select mx-2" [(ngModel)]="selectedCountryId" (change)="onCountryChange()">
             <option [ngValue]="null">All countries</option>
             <option *ngFor="let c of countries" [ngValue]="c.id">{{ c.name }}</option>
           </select>
 
-          <select class="form-select filter-select" [(ngModel)]="selectedCityId" (change)="onFilterChange()"
+          <select class="form-select filter-select mr-2" [(ngModel)]="selectedCityId" (change)="onFilterChange()"
                   [disabled]="!selectedCountryId">
             <option [ngValue]="null">All cities</option>
             <option *ngFor="let c of cities" [ngValue]="c.id">{{ c.name }}</option>
@@ -42,7 +42,9 @@
 
   <div *ngIf="deleteError" class="alert alert-danger alert-dismissible">
     {{ deleteError }}
-    <button type="button" class="btn-close" (click)="deleteError=''"></button>
+    <button type="button" class="close" (click)="deleteError=''">
+      <span aria-hidden="true">&times;</span>
+    </button>
   </div>
 
   <div *ngIf="!loading" class="text-muted small mb-3">
@@ -53,12 +55,12 @@
     <div *ngFor="let warehouse of warehouses" class="col-md-6 col-lg-4">
       <div class="card h-100 shadow-sm">
 
-        <div class="factory-card-img-wrapper bg-light">
+        <div class="warehouse-card-img-wrapper bg-light">
           <img *ngIf="warehouseImages.get(warehouse.id) as imgUrl"
                [src]="imgUrl" [alt]="warehouse.name"
-               class="card-img-top factory-card-img">
+               class="card-img-top warehouse-card-img">
           <div *ngIf="!warehouseImages.get(warehouse.id)"
-               class="factory-card-img d-flex align-items-center justify-content-center text-muted">
+               class="warehouse-card-img d-flex align-items-center justify-content-center text-muted">
             <i class="bi bi-building" style="font-size:2rem"></i>
           </div>
         </div>
@@ -66,7 +68,7 @@
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-1">
             <h5 class="card-title mb-0">{{ warehouse.name }}</h5>
-            <span class="badge" [class.bg-success]="warehouse.isOnline" [class.bg-secondary]="!warehouse.isOnline">
+            <span class="badge" [class.badge-success]="warehouse.isOnline" [class.badge-secondary]="!warehouse.isOnline">
               {{ warehouse.isOnline ? 'Online' : 'Offline' }}
             </span>
           </div>
@@ -84,9 +86,19 @@
         </div>
 
         <div class="card-footer bg-transparent d-flex gap-2">
-          <a [routerLink]="['/warehouses', warehouse.id]" class="btn btn-outline-primary btn-sm flex-fill">View</a>
-          <a [routerLink]="['/warehouses/edit', warehouse.id]" class="btn btn-outline-secondary btn-sm flex-fill">Edit</a>
-          <button class="btn btn-outline-danger btn-sm flex-fill" (click)="deleteWarehouse(warehouse.id)">Delete</button>
+          <a [routerLink]="['/warehouses', warehouse.id]" class="btn btn-outline-primary btn-sm flex-fill mr-1">View</a>
+          <a [routerLink]="['/warehouses/edit', warehouse.id]" class="btn btn-outline-secondary btn-sm flex-fill mx-1">Edit</a>
+
+          <ng-container *ngIf="confirmDeleteId !== warehouse.id">
+            <button class="btn btn-outline-danger btn-sm flex-fill ml-1" (click)="deleteWarehouse(warehouse.id)">
+              Delete
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="confirmDeleteId === warehouse.id">
+            <button class="btn btn-danger btn-sm flex-fill mx-1" (click)="confirmDelete()">Yes</button>
+            <button class="btn btn-outline-secondary btn-sm flex-fill ml-1" (click)="cancelDelete()">No</button>
+          </ng-container>
         </div>
       </div>
     </div>

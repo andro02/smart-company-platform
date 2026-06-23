@@ -12,6 +12,7 @@ import { Warehouse, WarehouseSearchParams } from '../warehouse.model';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './warehouse-list.component.html',
+  styleUrl: './warehouse-list.component.css'
 })
 export class WarehouseListComponent implements OnInit, OnDestroy {
 
@@ -150,12 +151,24 @@ export class WarehouseListComponent implements OnInit, OnDestroy {
     this.loadWarehouses();
   }
 
+  confirmDeleteId: number | null = null;
+
   deleteWarehouse(id: number): void {
-    if (!confirm('Are you sure you want to delete this warehouse?')) return;
-    this.warehouseService.delete(id).then(() => {
+    this.confirmDeleteId = id;
+  }
+
+  confirmDelete(): void {
+    if (this.confirmDeleteId === null) return;
+    this.warehouseService.delete(this.confirmDeleteId).then(() => {
+      this.confirmDeleteId = null;
       this.loadWarehouses();
     }).catch(() => {
+      this.confirmDeleteId = null;
       this.deleteError = 'Failed to delete warehouse.';
     });
+  }
+
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
   }
 }
