@@ -49,9 +49,16 @@ export class OrderFormComponent implements OnInit, OnDestroy {
   companies: Company[] = [];
   cart: CartItem[] = [];
   productImages: { [productId: number]: string } = {};
+  categories: { id: number; name: string }[] = [];
 
   selectedCompanyId: number | null = null;
+  selectedCategoryId: number | null = null;
   searchQuery = '';
+  sortBy = 'name';
+  sortDir = 'asc';
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+
   currentPage = 0;
   totalPages = 0;
   totalElements = 0;
@@ -72,6 +79,7 @@ export class OrderFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCompanies();
+    this.loadCategories();
     this.loadProducts();
 
     this.searchSubject.pipe(
@@ -92,6 +100,44 @@ export class OrderFormComponent implements OnInit, OnDestroy {
     this.searchSubject.next(this.searchQuery);
   }
 
+  onCategoryChange(): void {
+    this.currentPage = 0;
+    this.loadProducts();
+  }
+
+  onForSaleChange(): void {
+    this.currentPage = 0;
+    this.loadProducts();
+  }
+
+  onSortChange(field: string): void {
+    if (this.sortBy === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = field;
+      this.sortDir = 'asc';
+    }
+    this.currentPage = 0;
+    this.loadProducts();
+  }
+
+  resetFilters(): void {
+    this.searchQuery = '';
+    this.selectedCategoryId = null;
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.sortBy = 'name';
+    this.sortDir = 'asc';
+    this.currentPage = 0;
+    this.loadProducts();
+  }
+
+  loadCategories(): void {
+    this.axiosService.request('GET', '/api/orders/categories', null)
+      .then((res: any) => this.categories = res.data)
+      .catch(() => {});
+  }
+
   loadCompanies(): void {
     this.isLoadingCompanies = true;
     this.axiosService.request('GET', '/api/orders/my-companies', null)
@@ -105,8 +151,13 @@ export class OrderFormComponent implements OnInit, OnDestroy {
     const params = new URLSearchParams({
       page: this.currentPage.toString(),
       size: '10',
+      sortBy: this.sortBy,
+      sortDir: this.sortDir,
     });
     if (this.searchQuery) params.set('name', this.searchQuery);
+    if (this.selectedCategoryId) params.set('categoryId', this.selectedCategoryId.toString());
+    if (this.minPrice != null) params.set('minPrice', this.minPrice.toString());
+    if (this.maxPrice != null) params.set('maxPrice', this.maxPrice.toString());
 
     this.axiosService.request('GET', `/api/orders/products?${params}`, null)
       .then((res: any) => {
