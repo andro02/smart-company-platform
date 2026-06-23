@@ -1,7 +1,6 @@
 <div class="container py-4" style="max-width: 860px;">
 
   <div class="d-flex align-items-center mb-4 gap-3">
-    <a routerLink="/companies/manage" class="btn btn-outline-secondary btn-sm">← Back</a>
     <h2 class="mb-0">Company Registration Request</h2>
   </div>
 
@@ -68,12 +67,12 @@
       <div class="card-body">
         <h5 class="card-title">Decision</h5>
 
-        <div *ngIf="!showRejectForm" class="d-flex gap-2">
-          <button class="btn btn-success" (click)="approve()" [disabled]="submitting">
+        <div *ngIf="!showRejectForm" class="d-flex">
+          <button class="btn btn-success w-50 mr-2" (click)="approve()" [disabled]="submitting">
             <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
             Approve
           </button>
-          <button class="btn btn-danger" (click)="showRejectForm = true" [disabled]="submitting">
+          <button class="btn btn-danger w-50 ml-2" (click)="showRejectForm = true" [disabled]="submitting">
             Reject
           </button>
         </div>
@@ -82,12 +81,12 @@
           <label class="form-label">Rejection reason <span class="text-danger">*</span></label>
           <textarea class="form-control mb-2" rows="3" [(ngModel)]="rejectionReason"
                     placeholder="Explain why this request is being rejected..."></textarea>
-          <div class="d-flex gap-2">
-            <button class="btn btn-danger" (click)="reject()" [disabled]="submitting">
+          <div class="d-flex">
+            <button class="btn btn-danger w-50 mr-2" (click)="reject()" [disabled]="submitting">
               <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
               Confirm Rejection
             </button>
-            <button class="btn btn-outline-secondary" (click)="showRejectForm = false" [disabled]="submitting">
+            <button class="btn btn-outline-secondary w-50 ml-2" (click)="showRejectForm = false" [disabled]="submitting">
               Cancel
             </button>
           </div>
