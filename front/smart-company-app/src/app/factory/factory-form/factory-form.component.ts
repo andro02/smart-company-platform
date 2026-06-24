@@ -36,6 +36,9 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
   cities: City[] = [];
   imageUrls: string[] = []; // presigned URLs za prikaz
 
+  products: any[] = [];
+  loadingProducts = false;
+
   private map!: L.Map;
   private marker: L.Marker | null = null;
 
@@ -51,6 +54,8 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
       this.countries = res.data;
     });
 
+    this.loadProducts();
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -59,6 +64,26 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadFactory(this.factoryId);
       }
     });
+  }
+
+  loadProducts(): void {
+    this.loadingProducts = true;
+    this.factoryService.getProducts().then((res: any) => {
+      this.products = res.data.content;
+    }).finally(() => this.loadingProducts = false);
+  }
+
+  isProductSelected(productId: number): boolean {
+    return this.productIds.includes(productId);
+  }
+
+  toggleProduct(productId: number): void {
+    const idx = this.productIds.indexOf(productId);
+    if (idx === -1) {
+      this.productIds.push(productId);
+    } else {
+      this.productIds.splice(idx, 1);
+    }
   }
 
   async ngAfterViewInit(): Promise<void> {
