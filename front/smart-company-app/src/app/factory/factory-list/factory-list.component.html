@@ -68,7 +68,8 @@
         <div class="factory-card-img-wrapper bg-light">
           <img *ngIf="factoryImages.get(factory.id) as imgUrl"
                [src]="imgUrl" alt="{{ factory.name }}"
-               class="card-img-top factory-card-img">
+               class="card-img-top factory-card-img"
+               loading="lazy">
           <div *ngIf="!factoryImages.get(factory.id)"
                class="factory-card-img d-flex align-items-center justify-content-center text-muted">
             <i class="bi bi-building" style="font-size:2rem"></i>
