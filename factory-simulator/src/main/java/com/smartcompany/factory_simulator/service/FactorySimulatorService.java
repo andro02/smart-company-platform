@@ -10,6 +10,7 @@ import java.util.Random;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -18,22 +19,23 @@ import com.smartcompany.factory_simulator.config.SimulatorRabbitConfig;
 import jakarta.annotation.PostConstruct;
 
 @Service
+@ConditionalOnProperty(name = "simulator.factory.enabled", havingValue = "true", matchIfMissing = false)
 public class FactorySimulatorService {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    @Value("${simulator.factory.id}")
+    @Value("${simulator.factory.id:0}")
     private Long factoryId;
 
-    @Value("${simulator.factory.name}")
+    @Value("${simulator.factory.name:disabled}")
     private String factoryName;
 
     // Format: "productId:minQty:maxQty,productId:minQty:maxQty"
-    @Value("${simulator.products}")
+    @Value("${simulator.products:1:0:0}")
     private String productsConfig;
 
-    @Value("${simulator.production.test.mode:true}")
+    @Value("${simulator.production.test.mode:false}")
     private boolean testMode;
 
     private final Random random = new Random();
@@ -67,7 +69,7 @@ public class FactorySimulatorService {
         msg.put("timestamp", Instant.now().toString());
 
         rabbitTemplate.convertAndSend(
-                SimulatorRabbitConfig.EXCHANGE,
+                SimulatorRabbitConfig.FACTORY_EXCHANGE,
                 "factory.heartbeat",
                 msg
         );
@@ -104,7 +106,7 @@ public class FactorySimulatorService {
             msg.put("timestamp", Instant.now().toString());
 
             rabbitTemplate.convertAndSend(
-                    SimulatorRabbitConfig.EXCHANGE,
+                    SimulatorRabbitConfig.FACTORY_EXCHANGE,
                     "factory.production",
                     msg
             );
