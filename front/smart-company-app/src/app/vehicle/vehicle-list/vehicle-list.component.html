@@ -58,7 +58,8 @@
         <div class="vehicle-card-img-wrapper bg-light">
           <img *ngIf="vehicleImages.get(vehicle.id) as imgUrl"
                [src]="imgUrl" [alt]="vehicle.licensePlate"
-               class="card-img-top vehicle-card-img">
+               class="card-img-top vehicle-card-img"
+               loading="lazy">
           <div *ngIf="!vehicleImages.get(vehicle.id)"
                class="vehicle-card-img d-flex align-items-center justify-content-center text-muted">
             <i class="bi bi-truck" style="font-size:2rem"></i>
