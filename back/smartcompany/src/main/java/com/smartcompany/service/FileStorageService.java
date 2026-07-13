@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.smartcompany.dto.PreSignedUrlDto;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -26,6 +28,8 @@ public class FileStorageService {
     private final String accessKeyId;
     private final String secretAccessKey;
 
+    private S3Presigner presigner;
+
     public FileStorageService(@Value("${aws.region}") String region,
                               @Value("${aws.s3.bucket-name}") String bucketName,
                               @Value("${aws.access-key-id}") String accessKeyId,
@@ -34,6 +38,22 @@ public class FileStorageService {
         this.region = region;
         this.accessKeyId = accessKeyId;
         this.secretAccessKey = secretAccessKey;
+    }
+
+    @PostConstruct
+    public void init() {
+        this.presigner = S3Presigner.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
+                .build();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (this.presigner != null) {
+            this.presigner.close();
+        }
     }
 
     /**
@@ -49,8 +69,6 @@ public class FileStorageService {
                 : "";
         String key = folder + "/" + UUID.randomUUID() + extension;
 
-        S3Presigner presigner = buildPresigner();
-
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -59,8 +77,6 @@ public class FileStorageService {
         PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(b -> b
                 .signatureDuration(Duration.ofMinutes(15))
                 .putObjectRequest(putObjectRequest));
-
-        presigner.close();
 
         return new PreSignedUrlDto(presignedRequest.url(), key);
     }
@@ -72,8 +88,6 @@ public class FileStorageService {
      * @return presigned URL valid for 15 minutes
      */
     public URL generatePreSignedGetUrl(String key) {
-        S3Presigner presigner = buildPresigner();
-
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -83,16 +97,6 @@ public class FileStorageService {
                 .signatureDuration(Duration.ofMinutes(15))
                 .getObjectRequest(getObjectRequest));
 
-        presigner.close();
-
         return presignedRequest.url();
-    }
-
-    private S3Presigner buildPresigner() {
-        return S3Presigner.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(accessKeyId, secretAccessKey)))
-                .build();
     }
 }

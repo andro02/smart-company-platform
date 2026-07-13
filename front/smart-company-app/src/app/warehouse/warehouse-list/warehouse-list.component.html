@@ -58,7 +58,8 @@
         <div class="warehouse-card-img-wrapper bg-light">
           <img *ngIf="warehouseImages.get(warehouse.id) as imgUrl"
                [src]="imgUrl" [alt]="warehouse.name"
-               class="card-img-top warehouse-card-img">
+               class="card-img-top warehouse-card-img"
+               loading="lazy">
           <div *ngIf="!warehouseImages.get(warehouse.id)"
                class="warehouse-card-img d-flex align-items-center justify-content-center text-muted">
             <i class="bi bi-building" style="font-size:2rem"></i>
