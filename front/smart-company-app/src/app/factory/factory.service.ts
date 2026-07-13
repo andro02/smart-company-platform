@@ -46,6 +46,10 @@ export class FactoryService {
     return this.axios.request('GET', `${this.base}/cities?countryId=${countryId}`, null);
   }
 
+  getProducts() {
+    return this.axios.request('GET', '/products?page=0&size=100&sortBy=name&sortDir=asc', null);
+  }
+
   getProductionData(
     factoryId: number,
     productId: number,
