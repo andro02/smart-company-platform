@@ -22,6 +22,7 @@ import com.smartcompany.specification.CompanySpecification;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -120,8 +121,20 @@ public class CompanyService {
 
     @Transactional
     public CompanyDetailDto decide(Long id, CompanyDecisionDto dto) {
-        Company company = companyRepository.findById(id)
-            .orElseThrow(() -> new AppException("Company not found", HttpStatus.NOT_FOUND));
+        Company company;
+        try {
+            // PESIMISTIČKO ZAKLJUČAVANJE: findByIdForUpdate radi SELECT ... FOR
+            // UPDATE — drugi menadžer koji pokuša da obradi isti zahtev čeka dok
+            // se ova transakcija ne završi, umesto da oba istovremeno prođu
+            // proveru statusa.
+            company = companyRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new AppException("Company not found", HttpStatus.NOT_FOUND));
+        } catch (PessimisticLockingFailureException e) {
+            throw new AppException(
+                "Zahtev trenutno obrađuje drugi menadžer, pokušajte ponovo",
+                HttpStatus.CONFLICT
+            );
+        }
 
         if (company.getStatus() != CompanyStatus.PENDING) {
             throw new AppException("Company request already processed", HttpStatus.BAD_REQUEST);
