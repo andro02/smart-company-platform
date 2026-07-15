@@ -15,6 +15,8 @@ import com.smartcompany.repository.warehouse.WarehouseSectorRepository;
 import com.smartcompany.service.InfluxDBService;
 import com.smartcompany.specification.WarehouseSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -36,7 +38,8 @@ public class WarehouseService {
     @Autowired private InfluxDBService influxDBService;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
-
+    @Cacheable(value = "warehouses",
+        key = "#search + '-' + #countryId + '-' + #cityId + '-' + #isOnline + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<WarehouseDto> search(String search, Long countryId, Long cityId,
                                      Boolean isOnline, Pageable pageable) {
         Specification<Warehouse> spec =
@@ -49,6 +52,7 @@ public class WarehouseService {
     }
 
     @Transactional
+    @CacheEvict(value = "warehouses", allEntries = true)
     public WarehouseDto create(WarehouseRequestDto dto) {
         Country country = countryRepository.findById(dto.countryId())
             .orElseThrow(() -> new AppException("Country not found", HttpStatus.NOT_FOUND));
@@ -61,6 +65,7 @@ public class WarehouseService {
     }
 
     @Transactional
+    @CacheEvict(value = "warehouses", allEntries = true)
     public WarehouseDto update(Long id, WarehouseRequestDto dto) {
         Warehouse warehouse = findOrThrow(id);
         Country country = countryRepository.findById(dto.countryId())
@@ -75,6 +80,7 @@ public class WarehouseService {
     }
 
     @Transactional
+    @CacheEvict(value = "warehouses", allEntries = true)
     public void delete(Long id) {
         if (!warehouseRepository.existsById(id)) {
             throw new AppException("Warehouse not found", HttpStatus.NOT_FOUND);

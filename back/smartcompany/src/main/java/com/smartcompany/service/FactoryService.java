@@ -6,6 +6,8 @@ import com.smartcompany.model.*;
 import com.smartcompany.repository.*;
 import com.smartcompany.specification.FactorySpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,7 +29,8 @@ public class FactoryService {
     @Autowired private InfluxDBService influxDBService;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
-
+    @Cacheable(value = "factories",
+        key = "#search + '-' + #countryId + '-' + #cityId + '-' + #isOnline + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<FactoryDto> search(String search, Long countryId, Long cityId,
                                    Boolean isOnline, Pageable pageable) {
         Specification<Factory> spec = FactorySpecification.search(search, countryId, cityId, isOnline);
@@ -39,6 +42,7 @@ public class FactoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "factories", allEntries = true)
     public FactoryDto create(FactoryRequestDto dto) {
         Country country = countryRepository.findById(dto.countryId())
                 .orElseThrow(() -> new AppException("Country not found", HttpStatus.NOT_FOUND));
@@ -51,6 +55,7 @@ public class FactoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "factories", allEntries = true)
     public FactoryDto update(Long id, FactoryRequestDto dto) {
         Factory factory = findOrThrow(id);
         Country country = countryRepository.findById(dto.countryId())
@@ -64,6 +69,7 @@ public class FactoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "factories", allEntries = true)
     public void delete(Long id) {
         if (!factoryRepository.existsById(id)) {
             throw new AppException("Factory not found", HttpStatus.NOT_FOUND);
