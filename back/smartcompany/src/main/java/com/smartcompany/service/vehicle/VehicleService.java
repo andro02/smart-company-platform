@@ -7,6 +7,8 @@ import com.smartcompany.repository.vehicle.*;
 import com.smartcompany.service.InfluxDBService;
 import com.smartcompany.specification.VehicleSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,7 +29,8 @@ public class VehicleService {
     @Autowired private InfluxDBService influxDBService;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
-
+    @Cacheable(value = "vehicles",
+        key = "#search + '-' + #brandId + '-' + #modelId + '-' + #isOnline + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<VehicleDto> search(String search, Long brandId, Long modelId,
                                     Boolean isOnline, Pageable pageable) {
         Specification<Vehicle> spec = VehicleSpecification.search(search, brandId, modelId, isOnline);
@@ -39,6 +42,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @CacheEvict(value = "vehicles", allEntries = true)
     public VehicleDto create(VehicleRequestDto dto) {
         VehicleBrand brand = brandRepository.findById(dto.brandId())
             .orElseThrow(() -> new AppException("Brand not found", HttpStatus.NOT_FOUND));
@@ -55,6 +59,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @CacheEvict(value = "vehicles", allEntries = true)
     public VehicleDto update(Long id, VehicleRequestDto dto) {
         Vehicle vehicle = findOrThrow(id);
         VehicleBrand brand = brandRepository.findById(dto.brandId())
@@ -72,6 +77,7 @@ public class VehicleService {
     }
 
     @Transactional
+    @CacheEvict(value = "vehicles", allEntries = true)
     public void delete(Long id) {
         if (!vehicleRepository.existsById(id)) {
             throw new AppException("Vehicle not found", HttpStatus.NOT_FOUND);
@@ -81,12 +87,14 @@ public class VehicleService {
 
     // ─── Lookup ──────────────────────────────────────────────────────────────
 
+    @Cacheable("vehicle-brands")
     public List<VehicleBrandDto> getAllBrands() {
         return brandRepository.findAll().stream()
             .map(b -> new VehicleBrandDto(b.getId(), b.getName()))
             .toList();
     }
 
+    @Cacheable(value = "vehicle-models", key = "#brandId")
     public List<VehicleModelDto> getModelsByBrand(Long brandId) {
         return modelRepository.findByBrandId(brandId).stream()
             .map(m -> new VehicleModelDto(m.getId(), m.getName(), m.getBrand().getId()))
