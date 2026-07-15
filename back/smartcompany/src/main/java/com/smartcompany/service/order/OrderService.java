@@ -18,7 +18,6 @@ import com.smartcompany.service.EmailService;
 import com.smartcompany.service.PdfService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -127,7 +126,7 @@ public class OrderService {
 
                 total = total.add(product.getPrice().multiply(BigDecimal.valueOf(itemDto.quantity())));
             }
-        } catch (CannotAcquireLockException | PessimisticLockingFailureException e) {
+        } catch (PessimisticLockingFailureException e) {
             // Nije uspelo zaključavanje na vreme (npr. druga porudžbina predugo
             // drži iste redove) — javi korisniku da pokuša ponovo umesto 500-ke.
             throw new AppException(
