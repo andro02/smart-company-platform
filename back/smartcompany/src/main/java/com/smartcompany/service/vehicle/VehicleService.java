@@ -87,12 +87,14 @@ public class VehicleService {
 
     // ─── Lookup ──────────────────────────────────────────────────────────────
 
+    @Cacheable("vehicle-brands")
     public List<VehicleBrandDto> getAllBrands() {
         return brandRepository.findAll().stream()
             .map(b -> new VehicleBrandDto(b.getId(), b.getName()))
             .toList();
     }
 
+    @Cacheable(value = "vehicle-models", key = "#brandId")
     public List<VehicleModelDto> getModelsByBrand(Long brandId) {
         return modelRepository.findByBrandId(brandId).stream()
             .map(m -> new VehicleModelDto(m.getId(), m.getName(), m.getBrand().getId()))

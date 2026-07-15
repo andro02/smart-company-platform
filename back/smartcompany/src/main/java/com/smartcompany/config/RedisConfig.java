@@ -77,6 +77,15 @@ public class RedisConfig {
         cacheConfigs.put("warehouses", defaultConfig.entryTtl(Duration.ofSeconds(60)));
         cacheConfigs.put("vehicles", defaultConfig.entryTtl(Duration.ofSeconds(60)));
 
+
+        cacheConfigs.put("countries", defaultConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigs.put("cities", defaultConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigs.put("vehicle-brands", defaultConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigs.put("vehicle-models", defaultConfig.entryTtl(Duration.ofHours(24)));
+
+        cacheConfigs.put("managers", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigs.put("users", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheConfigs)

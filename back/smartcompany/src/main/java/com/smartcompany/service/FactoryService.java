@@ -79,12 +79,15 @@ public class FactoryService {
 
     // ─── Lookup ──────────────────────────────────────────────────────────────
 
+    @Cacheable("countries")
     public List<CountryDto> getAllCountries() {
         return countryRepository.findAll().stream()
                 .map(c -> new CountryDto(c.getId(), c.getName(), c.getCode()))
                 .toList();
     }
 
+
+    @Cacheable(value = "cities", key = "#countryId")
     public List<CityDto> getCitiesByCountry(Long countryId) {
         return cityRepository.findByCountryId(countryId).stream()
                 .map(c -> new CityDto(c.getId(), c.getName(), c.getCountry().getId()))

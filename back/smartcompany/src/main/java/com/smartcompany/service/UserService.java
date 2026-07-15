@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -39,6 +41,7 @@ public class UserService {
         return toUserDtos(userRepository.findAll());
     }
 
+    @Cacheable(value = "managers", key = "#search + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<UserDto> getManagers(String search, Pageable pageable) {
         return userRepository
                 .findAll(UserSpecification.searchManagers(search), pageable)
@@ -113,6 +116,7 @@ public class UserService {
         return toUserDto(userRepository.save(user));
     }
 
+    @CacheEvict(value = "users", key = "#username")
     public UserDto blockManager(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -122,7 +126,8 @@ public class UserService {
         user.setActive(false);
         return toUserDto(userRepository.save(user));
     }
-
+    
+    @CacheEvict(value = "users", key = "#username")
     public UserDto unblockManager(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -130,6 +135,7 @@ public class UserService {
         return toUserDto(userRepository.save(user));
     }
 
+    @CacheEvict(value = "users", key = "#username")
     public UserDto changePasswordAndReturn(ChangePasswordDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDto loggedUser = (UserDto) authentication.getPrincipal();
@@ -142,6 +148,7 @@ public class UserService {
         return toUserDto(userRepository.save(user));
     }
 
+    @CacheEvict(value = "users", key = "#username")
     public UserDto update(SignUpDto signUpDto, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -163,6 +170,7 @@ public class UserService {
         userRepository.deleteById(username);
     }
 
+    @Cacheable(value = "users", key = "#username")
     public UserDto findByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
