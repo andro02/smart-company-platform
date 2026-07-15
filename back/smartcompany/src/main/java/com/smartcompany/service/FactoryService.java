@@ -1,11 +1,16 @@
 package com.smartcompany.service;
 
 import com.smartcompany.dto.*;
+import com.smartcompany.dto.cache.CachedPage;
 import com.smartcompany.exception.AppException;
 import com.smartcompany.model.*;
 import com.smartcompany.repository.*;
 import com.smartcompany.specification.FactorySpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,13 +30,30 @@ public class FactoryService {
     @Autowired private CityRepository cityRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private InfluxDBService influxDBService;
+    @Autowired private CacheManager cacheManager;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
-
     public Page<FactoryDto> search(String search, Long countryId, Long cityId,
-                                   Boolean isOnline, Pageable pageable) {
+                               Boolean isOnline, Pageable pageable) {
+        Cache cache = cacheManager.getCache("factories");
+        String key = search + "-" + countryId + "-" + cityId + "-" + isOnline
+                + "-" + pageable.getPageNumber() + "-" + pageable.getPageSize() + "-" + pageable.getSort();
+
+        if (cache != null) {
+            CachedPage<FactoryDto> cached = cache.get(key, CachedPage.class);
+            if (cached != null) {
+                return cached.toPage(pageable);
+            }
+        }
+
         Specification<Factory> spec = FactorySpecification.search(search, countryId, cityId, isOnline);
-        return factoryRepository.findAll(spec, pageable).map(this::toDto);
+        Page<FactoryDto> result = factoryRepository.findAll(spec, pageable).map(this::toDto);
+
+        if (cache != null) {
+            cache.put(key, CachedPage.from(result));
+        }
+
+        return result;
     }
 
     public FactoryDto getById(Long id) {
@@ -39,6 +61,7 @@ public class FactoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "factories", allEntries = true)
     public FactoryDto create(FactoryRequestDto dto) {
         Country country = countryRepository.findById(dto.countryId())
                 .orElseThrow(() -> new AppException("Country not found", HttpStatus.NOT_FOUND));
@@ -51,6 +74,7 @@ public class FactoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "factories", allEntries = true)
     public FactoryDto update(Long id, FactoryRequestDto dto) {
         Factory factory = findOrThrow(id);
         Country country = countryRepository.findById(dto.countryId())
@@ -64,6 +88,7 @@ public class FactoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "factories", allEntries = true)
     public void delete(Long id) {
         if (!factoryRepository.existsById(id)) {
             throw new AppException("Factory not found", HttpStatus.NOT_FOUND);
@@ -73,16 +98,19 @@ public class FactoryService {
 
     // ─── Lookup ──────────────────────────────────────────────────────────────
 
+    @Cacheable("countries")
     public List<CountryDto> getAllCountries() {
         return countryRepository.findAll().stream()
                 .map(c -> new CountryDto(c.getId(), c.getName(), c.getCode()))
-                .toList();
+                .collect(java.util.stream.Collectors.toList()); 
     }
 
+
+    @Cacheable(value = "cities", key = "#countryId")
     public List<CityDto> getCitiesByCountry(Long countryId) {
         return cityRepository.findByCountryId(countryId).stream()
                 .map(c -> new CityDto(c.getId(), c.getName(), c.getCountry().getId()))
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
     }
 
     // ─── Heartbeat checker ───────────────────────────────────────────────────

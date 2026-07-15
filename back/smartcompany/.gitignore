@@ -35,5 +35,6 @@ build/
 aws.properties
 mail-secret.properties
 factory-simulator.properties
+redis.properties
 
 superadmin.txt
