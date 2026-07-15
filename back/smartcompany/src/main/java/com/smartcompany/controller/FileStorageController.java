@@ -2,6 +2,13 @@ package com.smartcompany.controller;
 
 import com.smartcompany.dto.PreSignedUrlDto;
 import com.smartcompany.service.FileStorageService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +17,7 @@ import java.net.URL;
 
 @RestController
 @RequestMapping("/api/files")
+@Tag(name = "File Storage", description = "Presigned S3 URL-ovi za upload i pregled fajlova")
 public class FileStorageController {
 
     @Autowired
@@ -30,8 +38,14 @@ public class FileStorageController {
      *   vehicle-images  - delivery vehicle images
      *   company-docs    - company registration documents (PDFs, images)
      */
-    @PutMapping("/presigned-url/put")
-    public ResponseEntity<PreSignedUrlDto> getUploadUrl(
+    @Operation(
+        summary = "Zatraži presigned URL za upload",
+        description = "Javni endpoint (per SecurityConfig). Vraća presigned S3 PUT URL (važi 15 min) i generisani S3 ključ. " +
+                      "Dozvoljeni folderi: profile-images, product-images, factory-images, warehouse-images, vehicle-images, company-docs."
+    )
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Presigned URL generisan") })
+    @SecurityRequirements
+    @PutMapping("/presigned-url/put")    public ResponseEntity<PreSignedUrlDto> getUploadUrl(
             @RequestParam("filename") String filename,
             @RequestParam("folder") String folder) {
         PreSignedUrlDto dto = fileStorageService.generatePreSignedPutUrl(filename, folder);
@@ -44,6 +58,9 @@ public class FileStorageController {
      * Returns a presigned S3 GET URL valid for 15 minutes.
      * Frontend uses this URL to display or download the file.
      */
+    @Operation(summary = "Zatraži presigned URL za preuzimanje/prikaz", description = "Javni endpoint (per SecurityConfig). Važi 15 minuta")
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Presigned URL generisan") })
+    @SecurityRequirements
     @GetMapping("/presigned-url/get")
     public ResponseEntity<String> getDownloadUrl(@RequestParam("key") String key) {
         URL url = fileStorageService.generatePreSignedGetUrl(key);

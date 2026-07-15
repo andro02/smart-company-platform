@@ -6,6 +6,8 @@ import com.smartcompany.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,38 +16,40 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
 @RequestMapping("/categories")
-@Tag(name = "Categories", description = "Product category management")
+@Tag(name = "Categories", description = "Upravljanje kategorijama proizvoda")
+@SecurityRequirement(name = "bearerAuth")
 public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
 
-    @Operation(summary = "Get all categories")
+    @Operation(summary = "Sve kategorije", description = "Javni endpoint (per SecurityConfig)")
+    @SecurityRequirements
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CategoryDto>> getAll() {
         return ResponseEntity.ok(categoryService.getAll());
     }
 
-    @Operation(summary = "Get category by ID")
+    @Operation(summary = "Kategorija po ID-u", description = "Javni endpoint (per SecurityConfig)")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Category found"),
-        @ApiResponse(responseCode = "404", description = "Category not found")
+        @ApiResponse(responseCode = "200", description = "Kategorija pronađena"),
+        @ApiResponse(responseCode = "404", description = "Kategorija nije pronađena")
     })
+    @SecurityRequirements
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CategoryDto> getById(@PathVariable Long id) {
         return ResponseEntity.ok(categoryService.getById(id));
     }
 
-    @Operation(summary = "Create a new category", description = "Requires Manager or SuperAdmin role")
+    @Operation(summary = "Kreiranje kategorije", description = "Zahteva Manager ili SuperAdmin rolu")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Category created"),
-        @ApiResponse(responseCode = "400", description = "Category name already exists"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(responseCode = "201", description = "Kategorija kreirana"),
+        @ApiResponse(responseCode = "400", description = "Kategorija sa tim nazivom već postoji"),
+        @ApiResponse(responseCode = "401", description = "Neautorizovan pristup")
     })
     @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,11 +58,11 @@ public class CategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @Operation(summary = "Update a category", description = "Requires Manager or SuperAdmin role")
+    @Operation(summary = "Izmena kategorije", description = "Zahteva Manager ili SuperAdmin rolu")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Category updated"),
-        @ApiResponse(responseCode = "404", description = "Category not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(responseCode = "200", description = "Kategorija izmenjena"),
+        @ApiResponse(responseCode = "404", description = "Kategorija nije pronađena"),
+        @ApiResponse(responseCode = "401", description = "Neautorizovan pristup")
     })
     @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -66,11 +70,11 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.update(id, dto));
     }
 
-    @Operation(summary = "Delete a category", description = "Requires Manager or SuperAdmin role")
+    @Operation(summary = "Brisanje kategorije", description = "Zahteva Manager ili SuperAdmin rolu")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Category deleted"),
-        @ApiResponse(responseCode = "404", description = "Category not found"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(responseCode = "204", description = "Kategorija obrisana"),
+        @ApiResponse(responseCode = "404", description = "Kategorija nije pronađena"),
+        @ApiResponse(responseCode = "401", description = "Neautorizovan pristup")
     })
     @PreAuthorize("hasAnyRole('Manager', 'SuperAdmin')")
     @DeleteMapping("/{id}")
