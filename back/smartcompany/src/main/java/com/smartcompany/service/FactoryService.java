@@ -91,7 +91,7 @@ public class FactoryService {
     @Transactional
     public void checkHeartbeats() {
         Instant cutoff = Instant.now().minusSeconds(60);
-        List<Factory> stale = factoryRepository.findStaleOnlineFactories(cutoff);
+        List<Factory> stale = factoryRepository.findStaleOnlineFactoriesForUpdate(cutoff);
         for (Factory f : stale) {
             f.setOnline(false);
             influxDBService.writeOfflineEvent(f.getId());
