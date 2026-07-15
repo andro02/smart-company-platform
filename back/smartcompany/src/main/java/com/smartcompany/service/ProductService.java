@@ -13,6 +13,7 @@ import com.smartcompany.repository.ProductRepository;
 import com.smartcompany.repository.warehouse.WarehouseItemRepository;
 import com.smartcompany.specification.ProductSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
@@ -78,7 +79,7 @@ public class ProductService {
         try {
             product = productRepository.findByIdForUpdate(id)
                     .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
-        } catch (CannotAcquireLockException | PessimisticLockingFailureException e) {
+        } catch (PessimisticLockingFailureException e) {
             throw new AppException(
                 "Proizvod se trenutno menja od strane drugog menadžera, pokušajte ponovo",
                 HttpStatus.CONFLICT
