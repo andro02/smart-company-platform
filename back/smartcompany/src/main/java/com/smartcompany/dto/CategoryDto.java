@@ -1,14 +1,14 @@
 package com.smartcompany.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Schema(description = "Kategorija proizvoda")
+@Data @AllArgsConstructor @NoArgsConstructor
 public class CategoryDto {
-    private Long id;
-    private String name;
-    private String description;
+    @Schema(description = "ID kategorije") private Long id;
+    @Schema(description = "Naziv kategorije", example = "Gume") private String name;
+    @Schema(description = "Opis kategorije") private String description;
 }

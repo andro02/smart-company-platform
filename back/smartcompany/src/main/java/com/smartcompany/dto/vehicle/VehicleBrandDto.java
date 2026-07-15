@@ -1,3 +1,9 @@
 package com.smartcompany.dto.vehicle;
 
-public record VehicleBrandDto(Long id, String name) {}
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Marka vozila")
+public record VehicleBrandDto(
+    @Schema(description = "ID marke") Long id,
+    @Schema(description = "Naziv marke", example = "Mercedes-Benz") String name
+) {}
