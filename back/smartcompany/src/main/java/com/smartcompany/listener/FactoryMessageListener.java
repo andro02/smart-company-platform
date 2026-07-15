@@ -43,19 +43,25 @@ public class FactoryMessageListener {
     @Transactional
     public void handleHeartbeat(HeartbeatMessage msg) {
         try {
-            Factory factory = factoryRepository.findById(msg.factoryId())
+            // PESIMISTIČKO ZAKLJUČAVANJE: findByIdForUpdate radi SELECT ... FOR
+            // UPDATE — sprečava da se ovaj heartbeat i checkHeartbeats() sudare
+            // nad isOnline/lastHeartbeat iste fabrike.
+            Factory factory = factoryRepository.findByIdForUpdate(msg.factoryId())
                     .orElseThrow(() -> new AppException("Factory not found: " + msg.factoryId(), HttpStatus.NOT_FOUND));
 
             factory.setOnline(true);
             factory.setLastHeartbeat(Instant.now());
             factoryRepository.save(factory);
 
-            // InfluxDB heartbeat event
             influxDBService.writeHeartbeat(msg.factoryId(), true, msg.timestamp());
 
         } catch (AppException e) {
             System.err.println("[Heartbeat] " + e.getMessage());
         } catch (Exception e) {
+            // Ovo hvata i lock timeout (CannotAcquireLockException /
+            // PessimisticLockingFailureException) — poruka će se requeue-ovati
+            // od strane Spring AMQP-a i pokušati ponovo, što je ok jer je
+            // situacija tranzijentna.
             System.err.println("[Heartbeat] Unexpected error: " + e.getMessage());
         }
     }

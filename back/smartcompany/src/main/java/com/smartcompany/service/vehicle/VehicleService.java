@@ -97,7 +97,7 @@ public class VehicleService {
 
     @Transactional
     public void handleHeartbeat(Long vehicleId) {
-        vehicleRepository.findById(vehicleId).ifPresent(v -> {
+        vehicleRepository.findByIdForUpdate(vehicleId).ifPresent(v -> {
             boolean wasOffline = !v.isOnline();
             v.setOnline(true);
             v.setLastHeartbeat(Instant.now());
@@ -111,7 +111,7 @@ public class VehicleService {
 
     @Transactional
     public void handleLocation(VehicleLocationMessage msg) {
-        vehicleRepository.findById(msg.vehicleId()).ifPresent(v -> {
+        vehicleRepository.findByIdForUpdate(msg.vehicleId()).ifPresent(v -> {
             v.setLatitude(msg.latitude());
             v.setLongitude(msg.longitude());
             vehicleRepository.save(v);
@@ -126,7 +126,7 @@ public class VehicleService {
     @Transactional
     public void checkHeartbeats() {
         Instant cutoff = Instant.now().minusSeconds(60);
-        List<Vehicle> stale = vehicleRepository.findStaleOnlineVehicles(cutoff);
+        List<Vehicle> stale = vehicleRepository.findStaleOnlineVehiclesForUpdate(cutoff);
         for (Vehicle v : stale) {
             v.setOnline(false);
             influxDBService.writeVehicleOfflineEvent(v.getId());

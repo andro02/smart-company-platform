@@ -74,8 +74,16 @@ public class ProductService {
 
     @Transactional
     public ProductDto update(Long id, ProductRequestDto dto) {
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
+        Product product;
+        try {
+            product = productRepository.findByIdForUpdate(id)
+                    .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
+        } catch (CannotAcquireLockException | PessimisticLockingFailureException e) {
+            throw new AppException(
+                "Proizvod se trenutno menja od strane drugog menadžera, pokušajte ponovo",
+                HttpStatus.CONFLICT
+            );
+        }
 
         Category category = categoryRepository.findById(dto.categoryId())
                 .orElseThrow(() -> new AppException("Category not found", HttpStatus.NOT_FOUND));

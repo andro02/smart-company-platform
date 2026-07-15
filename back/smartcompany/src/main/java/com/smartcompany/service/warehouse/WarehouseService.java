@@ -86,7 +86,9 @@ public class WarehouseService {
 
     @Transactional
     public void handleHeartbeat(Long warehouseId) {
-        warehouseRepository.findById(warehouseId).ifPresent(w -> {
+        // Zaključava red magacina (SELECT ... FOR UPDATE) da se ne bi
+        // konkurentni heartbeat i checkHeartbeats() sudarili nad isOnline/lastHeartbeat
+        warehouseRepository.findByIdForUpdate(warehouseId).ifPresent(w -> {
             boolean wasOffline = !w.isOnline();
             w.setOnline(true);
             w.setLastHeartbeat(Instant.now());
@@ -100,7 +102,7 @@ public class WarehouseService {
 
     @Transactional
     public void handleTemperature(TemperatureMessage msg) {
-        sectorRepository.findById(msg.sectorId()).ifPresent(sector -> {
+        sectorRepository.findByIdForUpdate(msg.sectorId()).ifPresent(sector -> {
             sector.setLastTemperature(msg.temperature());
             sector.setLastMeasuredAt(msg.timestamp());
             sectorRepository.save(sector);
@@ -114,7 +116,9 @@ public class WarehouseService {
     @Transactional
     public void checkHeartbeats() {
         Instant cutoff = Instant.now().minusSeconds(60);
-        List<Warehouse> stale = warehouseRepository.findStaleOnlineWarehouses(cutoff);
+        // Zaključana varijanta postojećeg upita — sprečava da se ovaj scheduled
+        // posao i konkurentan handleHeartbeat() za isti magacin preseku
+        List<Warehouse> stale = warehouseRepository.findStaleOnlineWarehousesForUpdate(cutoff);
         for (Warehouse w : stale) {
             w.setOnline(false);
             influxDBService.writeWarehouseOfflineEvent(w.getId());
