@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import com.smartcompany.dto.ChangePasswordDto;
 import com.smartcompany.dto.CredentialsDto;
 import com.smartcompany.dto.SignUpDto;
 import com.smartcompany.dto.UserDto;
+import com.smartcompany.dto.cache.CachedPage;
 import com.smartcompany.exception.AppException;
 import com.smartcompany.model.User;
 import com.smartcompany.model.UserType;
@@ -36,16 +39,33 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private CacheManager cacheManager;
 
     public List<UserDto> getAll() {
         return toUserDtos(userRepository.findAll());
     }
 
-    @Cacheable(value = "managers", key = "#search + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<UserDto> getManagers(String search, Pageable pageable) {
-        return userRepository
+        Cache cache = cacheManager.getCache("managers");
+        String key = search + "-" + pageable.getPageNumber() + "-" + pageable.getPageSize();
+
+        if (cache != null) {
+            CachedPage<UserDto> cached = cache.get(key, CachedPage.class);
+            if (cached != null) {
+                return cached.toPage(pageable);
+            }
+        }
+
+        Page<UserDto> result = userRepository
                 .findAll(UserSpecification.searchManagers(search), pageable)
                 .map(this::toUserDto);
+
+        if (cache != null) {
+            cache.put(key, CachedPage.from(result));
+        }
+
+        return result;
     }
 
     public UserDto login(CredentialsDto credentialsDto) {

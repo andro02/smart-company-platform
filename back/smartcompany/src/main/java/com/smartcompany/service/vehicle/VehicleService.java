@@ -1,5 +1,6 @@
 package com.smartcompany.service.vehicle;
 
+import com.smartcompany.dto.cache.CachedPage;
 import com.smartcompany.dto.vehicle.*;
 import com.smartcompany.exception.AppException;
 import com.smartcompany.model.vehicle.*;
@@ -7,6 +8,8 @@ import com.smartcompany.repository.vehicle.*;
 import com.smartcompany.service.InfluxDBService;
 import com.smartcompany.specification.VehicleSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -27,14 +30,30 @@ public class VehicleService {
     @Autowired private VehicleBrandRepository brandRepository;
     @Autowired private VehicleModelRepository modelRepository;
     @Autowired private InfluxDBService influxDBService;
+    @Autowired private CacheManager cacheManager;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
-    @Cacheable(value = "vehicles",
-        key = "#search + '-' + #brandId + '-' + #modelId + '-' + #isOnline + '-' + #pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<VehicleDto> search(String search, Long brandId, Long modelId,
-                                    Boolean isOnline, Pageable pageable) {
+                                Boolean isOnline, Pageable pageable) {
+        Cache cache = cacheManager.getCache("vehicles");
+        String key = search + "-" + brandId + "-" + modelId + "-" + isOnline
+                + "-" + pageable.getPageNumber() + "-" + pageable.getPageSize() + "-" + pageable.getSort();
+
+        if (cache != null) {
+            CachedPage<VehicleDto> cached = cache.get(key, CachedPage.class);
+            if (cached != null) {
+                return cached.toPage(pageable);
+            }
+        }
+
         Specification<Vehicle> spec = VehicleSpecification.search(search, brandId, modelId, isOnline);
-        return vehicleRepository.findAll(spec, pageable).map(this::toDto);
+        Page<VehicleDto> result = vehicleRepository.findAll(spec, pageable).map(this::toDto);
+
+        if (cache != null) {
+            cache.put(key, CachedPage.from(result));
+        }
+
+        return result;
     }
 
     public VehicleDto getById(Long id) {
@@ -90,15 +109,15 @@ public class VehicleService {
     @Cacheable("vehicle-brands")
     public List<VehicleBrandDto> getAllBrands() {
         return brandRepository.findAll().stream()
-            .map(b -> new VehicleBrandDto(b.getId(), b.getName()))
-            .toList();
+                .map(b -> new VehicleBrandDto(b.getId(), b.getName()))
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Cacheable(value = "vehicle-models", key = "#brandId")
     public List<VehicleModelDto> getModelsByBrand(Long brandId) {
         return modelRepository.findByBrandId(brandId).stream()
-            .map(m -> new VehicleModelDto(m.getId(), m.getName(), m.getBrand().getId()))
-            .toList();
+                .map(m -> new VehicleModelDto(m.getId(), m.getName(), m.getBrand().getId()))
+                .collect(java.util.stream.Collectors.toList());
     }
 
     // ─── Heartbeat & location ──────────────────────────────────────────────

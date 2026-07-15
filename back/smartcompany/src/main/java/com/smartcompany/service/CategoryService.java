@@ -24,7 +24,7 @@ public class CategoryService {
         return categoryRepository.findAll()
                 .stream()
                 .map(this::toDto)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public CategoryDto getById(Long id) {
