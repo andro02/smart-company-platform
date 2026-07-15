@@ -3,32 +3,27 @@ package com.smartcompany.dto;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.smartcompany.model.UserType;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@AllArgsConstructor
-@Data
+@Schema(description = "Podaci o prijavljenom korisniku")
+@AllArgsConstructor @Data
 public class UserDto implements UserDetails {
-
-    private String username;
-    private String token;
-    private UserType type;
-    @JsonProperty("isActive")
-    private boolean isActive;
-    @JsonProperty("mustChangePassword")
-    private boolean mustChangePassword;
-    private String email;
-    private String image;
-    private String activationToken;
+    @Schema(description = "Korisničko ime") private String username;
+    @Schema(description = "JWT token") private String token;
+    @Schema(description = "Tip korisnika") private UserType type;
+    @JsonProperty("isActive") @Schema(description = "Da li je nalog aktivan") private boolean isActive;
+    @JsonProperty("mustChangePassword") @Schema(description = "Da li mora da promeni lozinku") private boolean mustChangePassword;
+    @Schema(description = "Email adresa") private String email;
+    @Schema(description = "S3 ključ profilne slike") private String image;
+    @Schema(hidden = true) private String activationToken;
 
     @Override
     @JsonDeserialize(using = CustomAuthorityDeserializer.class)
@@ -38,9 +33,6 @@ public class UserDto implements UserDetails {
         return list;
     }
 
-    @Override
-    public String getPassword() { return null; }
-
-    @Override
-    public String getUsername() { return username; }
+    @Override public String getPassword() { return null; }
+    @Override public String getUsername() { return username; }
 }
