@@ -12,3 +12,4 @@ npm-debug.log
 .env
 
 seed_script.py
+smartcompanydb.dump
