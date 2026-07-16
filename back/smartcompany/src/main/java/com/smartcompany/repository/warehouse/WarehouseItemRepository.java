@@ -25,4 +25,6 @@ public interface WarehouseItemRepository extends JpaRepository<WarehouseItem, Lo
     List<WarehouseItem> findByProductIdWithStock(@Param("productId") Long productId);
 
     Optional<WarehouseItem> findByWarehouseIdAndProductId(Long warehouseId, Long productId);
+
+    boolean existsByProductId(Long productId);
 }
