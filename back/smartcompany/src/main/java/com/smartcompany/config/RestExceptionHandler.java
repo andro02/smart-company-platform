@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.smartcompany.dto.ErrorDto;
+import com.smartcompany.dto.error.ErrorDto;
 import com.smartcompany.exception.AppException;
 
 @ControllerAdvice

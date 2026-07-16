@@ -1,8 +1,9 @@
 package com.smartcompany.specification;
 
-import com.smartcompany.model.Factory;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+
+import com.smartcompany.model.factory.Factory;
 
 import java.util.ArrayList;
 import java.util.List;

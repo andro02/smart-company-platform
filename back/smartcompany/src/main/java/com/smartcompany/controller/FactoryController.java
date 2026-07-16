@@ -1,8 +1,13 @@
 package com.smartcompany.controller;
 
-import com.smartcompany.dto.*;
-import com.smartcompany.service.FactoryService;
-import com.smartcompany.service.ProductionService;
+import com.smartcompany.dto.factory.FactoryDto;
+import com.smartcompany.dto.factory.FactoryRequestDto;
+import com.smartcompany.dto.factory.ProductionDataDto;
+import com.smartcompany.dto.location.CityDto;
+import com.smartcompany.dto.location.CountryDto;
+import com.smartcompany.service.factory.FactoryService;
+import com.smartcompany.service.factory.ProductionService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

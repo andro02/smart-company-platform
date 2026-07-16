@@ -5,7 +5,7 @@ import com.smartcompany.dto.vehicle.*;
 import com.smartcompany.exception.AppException;
 import com.smartcompany.model.vehicle.*;
 import com.smartcompany.repository.vehicle.*;
-import com.smartcompany.service.InfluxDBService;
+import com.smartcompany.service.influx.InfluxDBService;
 import com.smartcompany.specification.VehicleSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
