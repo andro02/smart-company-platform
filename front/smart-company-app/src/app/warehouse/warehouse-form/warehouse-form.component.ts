@@ -70,7 +70,8 @@ export class WarehouseFormComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   async initMap(): Promise<void> {
-    const L = await import('leaflet');
+    const leafletModule: any = await import('leaflet');
+    const L = leafletModule.default ?? leafletModule;
     this.L = L;
 
     const iconDefault = L.icon({
@@ -178,17 +179,8 @@ export class WarehouseFormComponent implements OnInit, AfterViewInit, OnDestroy 
 
     files.forEach(file => {
       this.fileService.getUploadUrl(file.name, 'warehouse-images').subscribe({
-        next: (uploadResponse: string) => {
-          let uploadUrl: string;
-          let s3Key: string;
-          try {
-            const parsed = JSON.parse(uploadResponse);
-            uploadUrl = parsed.url;
-            s3Key = parsed.filename;
-          } catch {
-            uploadUrl = uploadResponse;
-            s3Key = new URL(uploadUrl).pathname.substring(1);
-          }
+        next: (uploadResponse) => {
+          const { url: uploadUrl, filename: s3Key } = uploadResponse;
           this.fileService.uploadToS3(uploadUrl, file).subscribe({
             next: () => {
               this.imageKeys.push(s3Key);

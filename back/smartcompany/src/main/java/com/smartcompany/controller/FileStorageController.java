@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URL;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/files")
 @Tag(name = "File Storage", description = "Presigned S3 URL-ovi za upload i pregled fajlova")
 public class FileStorageController {
 

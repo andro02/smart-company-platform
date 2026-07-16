@@ -109,13 +109,13 @@ export class RegisterComponent {
         this.fileService.getUploadUrl(this.selectedFile!.name, 'profile-images')
           .subscribe({
             next: (response) => {
-              const res = JSON.parse(response);
-              this.fileService.uploadToS3(res.url, this.selectedFile!)
+              const { url: uploadUrl, filename: s3Key } = response;
+              this.fileService.uploadToS3(uploadUrl, this.selectedFile!)
                 .subscribe({
                   next: () => {
                     const user = new User(
                       data.username, data.password, UserType.Customer,
-                      false, false, data.email, res.filename
+                      false, false, data.email, s3Key
                     );
                     this.axios.request('POST', '/register/customer', user)
                       .then(() => {

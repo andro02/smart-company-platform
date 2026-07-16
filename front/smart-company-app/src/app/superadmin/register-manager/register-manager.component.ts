@@ -109,8 +109,7 @@ export class RegisterManagerComponent {
       .then(() => {
         this.fileService.getUploadUrl(this.selectedFile!.name, 'profile-images')
           .subscribe({
-            next: (response) => {
-              const res = JSON.parse(response);
+            next: (res) => {
               this.fileService.uploadToS3(res.url, this.selectedFile!)
                 .subscribe({
                   next: () => {
