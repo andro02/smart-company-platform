@@ -1,19 +1,20 @@
 package com.smartcompany.service.warehouse;
 
-import com.smartcompany.dto.*;
 import com.smartcompany.dto.cache.CachedPage;
+import com.smartcompany.dto.location.CityDto;
+import com.smartcompany.dto.location.CountryDto;
 import com.smartcompany.dto.warehouse.TemperatureMessage;
 import com.smartcompany.dto.warehouse.WarehouseDto;
 import com.smartcompany.dto.warehouse.WarehouseRequestDto;
 import com.smartcompany.exception.AppException;
-import com.smartcompany.model.City;
-import com.smartcompany.model.Country;
+import com.smartcompany.model.location.City;
+import com.smartcompany.model.location.Country;
 import com.smartcompany.model.warehouse.*;
-import com.smartcompany.repository.CityRepository;
-import com.smartcompany.repository.CountryRepository;
+import com.smartcompany.repository.location.CityRepository;
+import com.smartcompany.repository.location.CountryRepository;
 import com.smartcompany.repository.warehouse.WarehouseRepository;
 import com.smartcompany.repository.warehouse.WarehouseSectorRepository;
-import com.smartcompany.service.InfluxDBService;
+import com.smartcompany.service.influx.InfluxDBService;
 import com.smartcompany.specification.WarehouseSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;

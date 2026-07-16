@@ -1,8 +1,9 @@
 package com.smartcompany.controller;
 
-import com.smartcompany.dto.CategoryDto;
-import com.smartcompany.dto.CategoryRequestDto;
-import com.smartcompany.service.CategoryService;
+import com.smartcompany.dto.product.CategoryDto;
+import com.smartcompany.dto.product.CategoryRequestDto;
+import com.smartcompany.service.product.CategoryService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

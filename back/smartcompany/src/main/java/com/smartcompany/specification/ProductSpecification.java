@@ -1,8 +1,9 @@
 package com.smartcompany.specification;
 
-import com.smartcompany.model.Product;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+
+import com.smartcompany.model.product.Product;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

@@ -7,8 +7,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.smartcompany.model.User;
 import com.smartcompany.model.company.Company;
+import com.smartcompany.model.user.User;
 
 @Entity
 @Table(

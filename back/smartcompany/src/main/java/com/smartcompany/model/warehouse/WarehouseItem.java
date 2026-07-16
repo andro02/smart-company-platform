@@ -1,6 +1,6 @@
 package com.smartcompany.model.warehouse;
 
-import com.smartcompany.model.Product;
+import com.smartcompany.model.product.Product;
 
 import jakarta.persistence.*;
 import lombok.*;

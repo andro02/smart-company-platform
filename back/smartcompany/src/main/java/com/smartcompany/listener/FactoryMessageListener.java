@@ -1,16 +1,17 @@
 package com.smartcompany.listener;
 
 import com.smartcompany.config.RabbitMQConfig;
-import com.smartcompany.dto.HeartbeatMessage;
-import com.smartcompany.dto.ProductionMessage;
+import com.smartcompany.dto.factory.HeartbeatMessage;
+import com.smartcompany.dto.factory.ProductionMessage;
 import com.smartcompany.exception.AppException;
-import com.smartcompany.model.Factory;
-import com.smartcompany.model.Product;
-import com.smartcompany.model.ProductionRecord;
-import com.smartcompany.repository.FactoryRepository;
-import com.smartcompany.repository.ProductRepository;
-import com.smartcompany.repository.ProductionRecordRepository;
-import com.smartcompany.service.InfluxDBService;
+import com.smartcompany.model.factory.Factory;
+import com.smartcompany.model.factory.ProductionRecord;
+import com.smartcompany.model.product.Product;
+import com.smartcompany.repository.factory.FactoryRepository;
+import com.smartcompany.repository.factory.ProductionRecordRepository;
+import com.smartcompany.repository.product.ProductRepository;
+import com.smartcompany.service.influx.InfluxDBService;
+
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

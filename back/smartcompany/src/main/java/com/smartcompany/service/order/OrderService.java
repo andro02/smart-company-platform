@@ -4,18 +4,20 @@ import com.smartcompany.dto.company.CompanyDto;
 import com.smartcompany.dto.order.CreateOrderDto;
 import com.smartcompany.dto.order.OrderResponseDto;
 import com.smartcompany.exception.AppException;
-import com.smartcompany.model.*;
 import com.smartcompany.model.company.Company;
 import com.smartcompany.model.company.CompanyStatus;
 import com.smartcompany.model.order.Order;
 import com.smartcompany.model.order.OrderItem;
+import com.smartcompany.model.product.Product;
+import com.smartcompany.model.user.User;
 import com.smartcompany.model.warehouse.WarehouseItem;
-import com.smartcompany.repository.*;
 import com.smartcompany.repository.company.CompanyRepository;
 import com.smartcompany.repository.order.OrderRepository;
+import com.smartcompany.repository.product.ProductRepository;
+import com.smartcompany.repository.user.UserRepository;
 import com.smartcompany.repository.warehouse.WarehouseItemRepository;
-import com.smartcompany.service.EmailService;
-import com.smartcompany.service.PdfService;
+import com.smartcompany.service.user.EmailService;
+import com.smartcompany.service.user.PdfService;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,9 +1,10 @@
 package com.smartcompany.dto.company;
 
-import com.smartcompany.dto.CityDto;
-import com.smartcompany.dto.CountryDto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+
+import com.smartcompany.dto.location.CityDto;
+import com.smartcompany.dto.location.CountryDto;
 
 @Schema(description = "Detalji zahteva za registraciju firme")
 public record CompanyDetailDto(

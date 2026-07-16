@@ -8,8 +8,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import com.smartcompany.dto.ErrorDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartcompany.dto.error.ErrorDto;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
