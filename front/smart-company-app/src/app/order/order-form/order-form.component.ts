@@ -42,6 +42,7 @@ interface Page<T> {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './order-form.component.html',
+  styleUrl: './order-form.component.css'
 })
 export class OrderFormComponent implements OnInit, OnDestroy {
 

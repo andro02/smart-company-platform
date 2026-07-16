@@ -80,8 +80,8 @@
         <div class="spinner-border text-primary"></div>
       </div>
 
-      <div class="row gy-3 gx-3" *ngIf="!isLoadingProducts">
-        <div class="col-md-6" *ngFor="let product of products">
+      <div class="row" *ngIf="!isLoadingProducts">
+        <div class="col-md-6 product-col" *ngFor="let product of products">
           <div class="card h-100" [class.border-primary]="getCartQuantity(product.id) > 0">
             <div class="row g-0 h-100">
 
