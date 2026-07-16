@@ -3,19 +3,28 @@ package com.smartcompany.dto;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.smartcompany.model.UserType;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Schema(description = "Podaci o prijavljenom korisniku")
-@AllArgsConstructor @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@JsonIgnoreProperties({"authorities", "enabled", "accountNonLocked", "credentialsNonExpired", "accountNonExpired", "password"})
 public class UserDto implements UserDetails {
+
     @Schema(description = "Korisničko ime") private String username;
     @Schema(description = "JWT token") private String token;
     @Schema(description = "Tip korisnika") private UserType type;
@@ -33,6 +42,9 @@ public class UserDto implements UserDetails {
         return list;
     }
 
-    @Override public String getPassword() { return null; }
-    @Override public String getUsername() { return username; }
+    @Override
+    public String getPassword() { return null; }
+
+    @Override
+    public String getUsername() { return username; }
 }

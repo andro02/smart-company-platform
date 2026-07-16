@@ -1,6 +1,7 @@
 package com.smartcompany.service.warehouse;
 
 import com.smartcompany.dto.*;
+import com.smartcompany.dto.cache.CachedPage;
 import com.smartcompany.dto.warehouse.TemperatureMessage;
 import com.smartcompany.dto.warehouse.WarehouseDto;
 import com.smartcompany.dto.warehouse.WarehouseRequestDto;
@@ -15,6 +16,9 @@ import com.smartcompany.repository.warehouse.WarehouseSectorRepository;
 import com.smartcompany.service.InfluxDBService;
 import com.smartcompany.specification.WarehouseSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,14 +38,30 @@ public class WarehouseService {
     @Autowired private CountryRepository countryRepository;
     @Autowired private CityRepository cityRepository;
     @Autowired private InfluxDBService influxDBService;
+    @Autowired private CacheManager cacheManager;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
-
     public Page<WarehouseDto> search(String search, Long countryId, Long cityId,
-                                     Boolean isOnline, Pageable pageable) {
-        Specification<Warehouse> spec =
-            WarehouseSpecification.search(search, countryId, cityId, isOnline);
-        return warehouseRepository.findAll(spec, pageable).map(this::toDto);
+                                 Boolean isOnline, Pageable pageable) {
+        Cache cache = cacheManager.getCache("warehouses");
+        String key = search + "-" + countryId + "-" + cityId + "-" + isOnline
+                + "-" + pageable.getPageNumber() + "-" + pageable.getPageSize() + "-" + pageable.getSort();
+
+        if (cache != null) {
+            CachedPage<WarehouseDto> cached = cache.get(key, CachedPage.class);
+            if (cached != null) {
+                return cached.toPage(pageable);
+            }
+        }
+
+        Specification<Warehouse> spec = WarehouseSpecification.search(search, countryId, cityId, isOnline);
+        Page<WarehouseDto> result = warehouseRepository.findAll(spec, pageable).map(this::toDto);
+
+        if (cache != null) {
+            cache.put(key, CachedPage.from(result));
+        }
+
+        return result;
     }
 
     public WarehouseDto getById(Long id) {
@@ -49,6 +69,7 @@ public class WarehouseService {
     }
 
     @Transactional
+    @CacheEvict(value = "warehouses", allEntries = true)
     public WarehouseDto create(WarehouseRequestDto dto) {
         Country country = countryRepository.findById(dto.countryId())
             .orElseThrow(() -> new AppException("Country not found", HttpStatus.NOT_FOUND));
@@ -61,6 +82,7 @@ public class WarehouseService {
     }
 
     @Transactional
+    @CacheEvict(value = "warehouses", allEntries = true)
     public WarehouseDto update(Long id, WarehouseRequestDto dto) {
         Warehouse warehouse = findOrThrow(id);
         Country country = countryRepository.findById(dto.countryId())
@@ -75,6 +97,7 @@ public class WarehouseService {
     }
 
     @Transactional
+    @CacheEvict(value = "warehouses", allEntries = true)
     public void delete(Long id) {
         if (!warehouseRepository.existsById(id)) {
             throw new AppException("Warehouse not found", HttpStatus.NOT_FOUND);

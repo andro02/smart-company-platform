@@ -18,6 +18,9 @@ import com.smartcompany.service.EmailService;
 import com.smartcompany.service.PdfService;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -54,6 +57,10 @@ public class OrderService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "product", allEntries = true)
+    })
     public OrderResponseDto createOrder(String customerUsername, CreateOrderDto dto) {
         User customer = userRepository.findById(customerUsername)
             .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));

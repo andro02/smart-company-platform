@@ -4,6 +4,7 @@ import com.smartcompany.dto.CategoryDto;
 import com.smartcompany.dto.FactorySummaryDto;
 import com.smartcompany.dto.ProductDto;
 import com.smartcompany.dto.ProductRequestDto;
+import com.smartcompany.dto.cache.CachedPage;
 import com.smartcompany.exception.AppException;
 import com.smartcompany.model.Category;
 import com.smartcompany.model.Product;
@@ -13,6 +14,11 @@ import com.smartcompany.repository.ProductRepository;
 import com.smartcompany.repository.warehouse.WarehouseItemRepository;
 import com.smartcompany.specification.ProductSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,12 +48,33 @@ public class ProductService {
     @Autowired
     private WarehouseItemRepository warehouseItemRepository;
 
+    @Autowired
+    private CacheManager cacheManager;
+
     public Page<ProductDto> search(String search, Long categoryId, Boolean isForSale,
-                                    BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+                                BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        Cache cache = cacheManager.getCache("products");
+        String key = search + "-" + categoryId + "-" + isForSale + "-" + minPrice + "-" + maxPrice
+                + "-" + pageable.getPageNumber() + "-" + pageable.getPageSize() + "-" + pageable.getSort();
+
+        if (cache != null) {
+            CachedPage<ProductDto> cached = cache.get(key, CachedPage.class);
+            if (cached != null) {
+                return cached.toPage(pageable);
+            }
+        }
+
         Specification<Product> spec = ProductSpecification.search(search, categoryId, isForSale, minPrice, maxPrice);
-        return productRepository.findAll(spec, pageable).map(this::toDto);
+        Page<ProductDto> result = productRepository.findAll(spec, pageable).map(this::toDto);
+
+        if (cache != null) {
+            cache.put(key, CachedPage.from(result));
+        }
+
+        return result;
     }
 
+    @Cacheable(value = "product", key = "#id")
     public ProductDto getById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException("Product not found", HttpStatus.NOT_FOUND));
@@ -55,6 +82,7 @@ public class ProductService {
     }
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public ProductDto create(ProductRequestDto dto) {
         Category category = categoryRepository.findById(dto.categoryId())
                 .orElseThrow(() -> new AppException("Category not found", HttpStatus.NOT_FOUND));
@@ -74,6 +102,10 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "product", key = "#id")
+    })
     public ProductDto update(Long id, ProductRequestDto dto) {
         Product product;
         try {
@@ -103,6 +135,10 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "products", allEntries = true),
+        @CacheEvict(value = "product", key = "#id")
+    })
     public void delete(Long id) {
         if (!productRepository.existsById(id)) {
             throw new AppException("Product not found", HttpStatus.NOT_FOUND);
@@ -124,11 +160,10 @@ public class ProductService {
                 product.isForSale(),
                 categoryDto,
                 totalStock,
-                null // factories - ucitava se posebno
+                null
         );
     }
 
-    // Koristi se za getById - SA fabrikama
     public ProductDto toDtoWithFactories(Product product) {
         ProductDto base = toDto(product);
         List<FactorySummaryDto> factories = factoryRepository.findByProductId(product.getId()).stream()
