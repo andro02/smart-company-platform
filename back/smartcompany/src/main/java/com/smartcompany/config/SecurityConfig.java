@@ -39,8 +39,8 @@ public class SecurityConfig {
                     // Aktivacija
                     .requestMatchers(HttpMethod.POST, "/activate/**").permitAll()
                     // Fajlovi
-                    .requestMatchers(HttpMethod.GET, "/api/files/presigned-url/get").permitAll()
-                    .requestMatchers(HttpMethod.PUT, "/api/files/presigned-url/put").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/files/presigned-url/get").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/files/presigned-url/put").permitAll()
                     // Promena lozinke dozvoli svima koji imaju validan token
                     .requestMatchers(HttpMethod.PUT, "/account/change-password").authenticated()
                     // Proizvodi i kategorije javno citanje
