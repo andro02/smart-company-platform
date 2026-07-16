@@ -1,7 +1,7 @@
 package com.smartcompany.controller;
 
-import com.smartcompany.dto.PreSignedUrlDto;
-import com.smartcompany.service.FileStorageService;
+import com.smartcompany.dto.file.PreSignedUrlDto;
+import com.smartcompany.service.user.FileStorageService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

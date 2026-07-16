@@ -1,9 +1,10 @@
 package com.smartcompany.specification;
 
-import com.smartcompany.model.User;
-import com.smartcompany.model.UserType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
+
+import com.smartcompany.model.user.User;
+import com.smartcompany.model.user.UserType;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -12,12 +12,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.smartcompany.config.UserAuthenticationProvider;
-import com.smartcompany.dto.ChangePasswordDto;
-import com.smartcompany.dto.CredentialsDto;
-import com.smartcompany.dto.SignUpDto;
-import com.smartcompany.dto.UserDto;
+import com.smartcompany.dto.user.ChangePasswordDto;
+import com.smartcompany.dto.user.CredentialsDto;
+import com.smartcompany.dto.user.SignUpDto;
+import com.smartcompany.dto.user.UserDto;
 import com.smartcompany.exception.AppException;
-import com.smartcompany.service.UserService;
+import com.smartcompany.service.user.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -1,8 +1,9 @@
 package com.smartcompany.dto.warehouse;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.smartcompany.dto.CityDto;
-import com.smartcompany.dto.CountryDto;
+import com.smartcompany.dto.location.CityDto;
+import com.smartcompany.dto.location.CountryDto;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 

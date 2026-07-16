@@ -1,23 +1,23 @@
 package com.smartcompany.service.company;
 
-import com.smartcompany.dto.CityDto;
-import com.smartcompany.dto.CountryDto;
 import com.smartcompany.dto.company.CompanyDecisionDto;
 import com.smartcompany.dto.company.CompanyDetailDto;
 import com.smartcompany.dto.company.CompanyRequestDto;
+import com.smartcompany.dto.location.CityDto;
+import com.smartcompany.dto.location.CountryDto;
 import com.smartcompany.exception.AppException;
-import com.smartcompany.model.City;
-import com.smartcompany.model.Country;
 import com.smartcompany.model.company.Company;
 import com.smartcompany.model.company.CompanyDocument;
 import com.smartcompany.model.company.CompanyImage;
 import com.smartcompany.model.company.CompanyStatus;
-import com.smartcompany.model.User;
-import com.smartcompany.repository.CityRepository;
-import com.smartcompany.repository.CountryRepository;
-import com.smartcompany.repository.UserRepository;
+import com.smartcompany.model.location.City;
+import com.smartcompany.model.location.Country;
+import com.smartcompany.model.user.User;
 import com.smartcompany.repository.company.CompanyRepository;
-import com.smartcompany.service.EmailService;
+import com.smartcompany.repository.location.CityRepository;
+import com.smartcompany.repository.location.CountryRepository;
+import com.smartcompany.repository.user.UserRepository;
+import com.smartcompany.service.user.EmailService;
 import com.smartcompany.specification.CompanySpecification;
 
 import lombok.RequiredArgsConstructor;

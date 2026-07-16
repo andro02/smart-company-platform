@@ -1,8 +1,9 @@
 package com.smartcompany.controller;
 
-import com.smartcompany.dto.ProductDto;
-import com.smartcompany.dto.ProductRequestDto;
-import com.smartcompany.service.ProductService;
+import com.smartcompany.dto.product.ProductDto;
+import com.smartcompany.dto.product.ProductRequestDto;
+import com.smartcompany.service.product.ProductService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 
-import com.smartcompany.model.Product;
+import com.smartcompany.model.product.Product;
 
 @Entity
 @Table(

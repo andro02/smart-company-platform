@@ -5,9 +5,9 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.smartcompany.model.City;
-import com.smartcompany.model.Country;
-import com.smartcompany.model.User;
+import com.smartcompany.model.location.City;
+import com.smartcompany.model.location.Country;
+import com.smartcompany.model.user.User;
 
 @Entity
 @Table(
