@@ -178,8 +178,7 @@ export class ProductFormComponent implements OnInit {
 
     if (this.selectedFile) {
       this.fileService.getUploadUrl(this.selectedFile.name, 'product-images').subscribe({
-        next: (response) => {
-          const res = JSON.parse(response);
+        next: (res) => {
           this.fileService.uploadToS3(res.url, this.selectedFile!).subscribe({
             next: () => this.saveProduct(res.filename),
             error: () => {

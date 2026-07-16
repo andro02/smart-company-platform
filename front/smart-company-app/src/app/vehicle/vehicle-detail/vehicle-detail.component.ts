@@ -82,7 +82,9 @@ export class VehicleDetailComponent implements OnInit, OnDestroy {
 
   private async initMap(): Promise<void> {
     if (!this.vehicle?.latitude || !this.vehicle?.longitude) return;
-    const L = await import('leaflet');
+    
+    const leafletModule: any = await import('leaflet');
+    const L = leafletModule.default ?? leafletModule;
 
     const iconDefault = L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
