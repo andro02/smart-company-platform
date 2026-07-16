@@ -13,7 +13,7 @@ export class AxiosService {
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
-    axios.defaults.baseURL = 'http://localhost:8080';
+    axios.defaults.baseURL = this.isBrowser ? '/api' : 'http://localhost:8080/api';
     axios.defaults.headers.post['Content-Type'] = 'application/json';
     axios.interceptors.response.use(
       response => response,

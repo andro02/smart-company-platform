@@ -94,17 +94,8 @@ export class VehicleFormComponent implements OnInit {
 
     files.forEach(file => {
       this.fileService.getUploadUrl(file.name, 'vehicle-images').subscribe({
-        next: (uploadResponse: string) => {
-          let uploadUrl: string;
-          let s3Key: string;
-          try {
-            const parsed = JSON.parse(uploadResponse);
-            uploadUrl = parsed.url;
-            s3Key = parsed.filename;
-          } catch {
-            uploadUrl = uploadResponse;
-            s3Key = new URL(uploadUrl).pathname.substring(1);
-          }
+        next: (uploadResponse) => {
+          const { url: uploadUrl, filename: s3Key } = uploadResponse;
           this.fileService.uploadToS3(uploadUrl, file).subscribe({
             next: () => {
               this.imageKeys.push(s3Key);

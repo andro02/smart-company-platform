@@ -62,8 +62,9 @@ export class CompanyFormComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async initMap(): Promise<void> {
-    const L = await import('leaflet');
-    this.L = L;
+    
+    const leafletModule: any = await import('leaflet');
+    const L = leafletModule.default ?? leafletModule;
 
     const iconDefault = L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -129,8 +130,8 @@ export class CompanyFormComponent implements OnInit, AfterViewInit, OnDestroy {
 
     files.forEach(file => {
       this.fileService.getUploadUrl(file.name, 'company-images').subscribe({
-        next: (uploadResponse: string) => {
-          const { uploadUrl, s3Key } = this.parseUploadResponse(uploadResponse);
+        next: (uploadResponse) => {
+          const { url: uploadUrl, filename: s3Key } = uploadResponse;
           this.fileService.uploadToS3(uploadUrl, file).subscribe({
             next: () => {
               this.imageKeys.push(s3Key);
@@ -174,8 +175,8 @@ export class CompanyFormComponent implements OnInit, AfterViewInit, OnDestroy {
       const fileType = file.type === 'application/pdf' ? 'pdf' : 'image';
 
       this.fileService.getUploadUrl(file.name, 'company-documents').subscribe({
-        next: (uploadResponse: string) => {
-          const { uploadUrl, s3Key } = this.parseUploadResponse(uploadResponse);
+        next: (uploadResponse) => {
+          const { url: uploadUrl, filename: s3Key } = uploadResponse;
           this.fileService.uploadToS3(uploadUrl, file).subscribe({
             next: () => {
               this.documents.push({ fileKey: s3Key, fileType });
@@ -207,15 +208,6 @@ export class CompanyFormComponent implements OnInit, AfterViewInit, OnDestroy {
   removeDocument(index: number): void {
     this.documents.splice(index, 1);
     this.documentUrls.splice(index, 1);
-  }
-
-  private parseUploadResponse(uploadResponse: string): { uploadUrl: string; s3Key: string } {
-    try {
-      const parsed = JSON.parse(uploadResponse);
-      return { uploadUrl: parsed.url, s3Key: parsed.filename };
-    } catch {
-      return { uploadUrl: uploadResponse, s3Key: new URL(uploadResponse).pathname.substring(1) };
-    }
   }
 
   // ─── Submit ──────────────────────────────────────────────────────
