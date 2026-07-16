@@ -173,10 +173,11 @@ export class ProductListComponent implements OnInit, OnDestroy {
     if (this.confirmDeleteId === null) return;
     this.productService.delete(this.confirmDeleteId).then(() => {
       this.confirmDeleteId = null;
+      this.deleteError = '';
       this.loadProducts();
-    }).catch(() => {
+    }).catch((err: any) => {
       this.confirmDeleteId = null;
-      this.deleteError = 'Failed to delete product.';
+      this.deleteError = err?.response?.data?.message || 'Failed to delete product.';
     });
   }
 

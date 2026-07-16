@@ -152,6 +152,7 @@
 .card-info {
   text-align: center;
   width: 100%;
+  flex: 1;
 }
 
 .card-username {
