@@ -12,6 +12,7 @@ import com.smartcompany.model.location.City;
 import com.smartcompany.model.location.Country;
 import com.smartcompany.model.product.Product;
 import com.smartcompany.repository.factory.FactoryRepository;
+import com.smartcompany.repository.factory.ProductionRecordRepository;
 import com.smartcompany.repository.location.CityRepository;
 import com.smartcompany.repository.location.CountryRepository;
 import com.smartcompany.repository.product.ProductRepository;
@@ -42,6 +43,7 @@ public class FactoryService {
     @Autowired private ProductRepository productRepository;
     @Autowired private InfluxDBService influxDBService;
     @Autowired private CacheManager cacheManager;
+    @Autowired private ProductionRecordRepository productionRecordRepository;
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
     public Page<FactoryDto> search(String search, Long countryId, Long cityId,
@@ -104,6 +106,11 @@ public class FactoryService {
         if (!factoryRepository.existsById(id)) {
             throw new AppException("Factory not found", HttpStatus.NOT_FOUND);
         }
+
+        if (productionRecordRepository.existsByFactoryId(id)) {
+            throw new AppException("Cannot delete factory with existing production records", HttpStatus.CONFLICT);
+        }
+
         factoryRepository.deleteById(id);
     }
 

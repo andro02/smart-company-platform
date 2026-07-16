@@ -9,6 +9,7 @@ import com.smartcompany.exception.AppException;
 import com.smartcompany.model.product.Category;
 import com.smartcompany.model.product.Product;
 import com.smartcompany.repository.factory.FactoryRepository;
+import com.smartcompany.repository.factory.ProductionRecordRepository;
 import com.smartcompany.repository.order.OrderItemRepository;
 import com.smartcompany.repository.product.CategoryRepository;
 import com.smartcompany.repository.product.ProductRepository;
@@ -51,6 +52,9 @@ public class ProductService {
 
     @Autowired
     private OrderItemRepository orderItemRepository;
+
+    @Autowired
+    private ProductionRecordRepository productionRecordRepository;
 
     @Autowired
     private CacheManager cacheManager;
@@ -154,6 +158,10 @@ public class ProductService {
 
         if (warehouseItemRepository.existsByProductId(id)) {
             throw new AppException("Cannot delete product that is stocked in a warehouse", HttpStatus.CONFLICT);
+        }
+
+        if (productionRecordRepository.existsByProductId(id)) {
+            throw new AppException("Cannot delete product with existing production records", HttpStatus.CONFLICT);
         }
 
         factoryRepository.deleteProductAssociations(id);

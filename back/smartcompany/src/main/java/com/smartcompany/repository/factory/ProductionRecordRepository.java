@@ -55,4 +55,8 @@ public interface ProductionRecordRepository extends JpaRepository<ProductionReco
                               @Param("productId") Long productId,
                               @Param("from") Instant from,
                               @Param("to") Instant to);
+
+    boolean existsByFactoryId(Long factoryId);
+
+    boolean existsByProductId(Long productId);
 }
