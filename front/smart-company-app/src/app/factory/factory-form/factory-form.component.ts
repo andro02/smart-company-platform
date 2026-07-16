@@ -100,6 +100,15 @@ export class FactoryFormComponent implements OnInit, AfterViewInit, OnDestroy {
   async initMap(): Promise<void> {
     const leafletModule: any = await import('leaflet');
     const L = leafletModule.default ?? leafletModule;
+    this.L = L;
+
+    const iconDefault = L.icon({
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      iconSize: [25, 41], iconAnchor: [12, 41]
+    });
+    L.Marker.prototype.options.icon = iconDefault;
 
     this.map = L.map('factory-map').setView([48.0, 15.0], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

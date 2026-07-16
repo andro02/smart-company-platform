@@ -65,6 +65,7 @@ export class CompanyFormComponent implements OnInit, AfterViewInit, OnDestroy {
     
     const leafletModule: any = await import('leaflet');
     const L = leafletModule.default ?? leafletModule;
+    this.L = L;
 
     const iconDefault = L.icon({
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
