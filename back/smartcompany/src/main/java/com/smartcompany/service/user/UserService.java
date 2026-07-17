@@ -9,6 +9,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -136,7 +137,10 @@ public class UserService {
         return toUserDto(userRepository.save(user));
     }
 
-    @CacheEvict(value = "users", key = "#username")
+    @Caching(evict = {
+        @CacheEvict(value = "users", key = "#username"),
+        @CacheEvict(value = "managers", allEntries = true)
+    })
     public UserDto blockManager(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
@@ -147,7 +151,10 @@ public class UserService {
         return toUserDto(userRepository.save(user));
     }
     
-    @CacheEvict(value = "users", key = "#username")
+    @Caching(evict = {
+        @CacheEvict(value = "users", key = "#username"),
+        @CacheEvict(value = "managers", allEntries = true)
+    })
     public UserDto unblockManager(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));

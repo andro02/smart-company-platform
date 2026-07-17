@@ -107,7 +107,7 @@ export class ManagerListComponent implements OnInit, OnDestroy {
 
     this.axios.request('PUT', endpoint, null)
       .then((response: any) => {
-        manager.isActive = response.data.active;
+        manager.isActive = response.data.isActive;
       })
       .catch(() => {
         this.errorMessage = 'Greška pri blokiranju/odblokiravanju menadžera.';
