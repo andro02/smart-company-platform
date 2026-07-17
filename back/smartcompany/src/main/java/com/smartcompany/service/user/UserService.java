@@ -103,7 +103,7 @@ public class UserService {
 
         String token = tokenService.generateActivationToken();
         user.setActivationToken(token);
-        String activationLink = "http://localhost:4200/activate?username=" + user.getUsername() + "&token=" + token;
+        String activationLink = "http://127.0.0.1/activate?username=" + user.getUsername() + "&token=" + token;
         emailService.sendActivationEmail(user.getEmail(), activationLink);
 
         return toUserDto(userRepository.save(user));
