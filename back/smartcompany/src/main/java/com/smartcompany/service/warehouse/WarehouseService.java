@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -85,7 +86,17 @@ public class WarehouseService {
     @Transactional
     @CacheEvict(value = "warehouses", allEntries = true)
     public WarehouseDto update(Long id, WarehouseRequestDto dto) {
-        Warehouse warehouse = findOrThrow(id);
+        Warehouse warehouse;
+        try {
+            warehouse = warehouseRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new AppException("Warehouse not found", HttpStatus.NOT_FOUND));
+        } catch (PessimisticLockingFailureException e) {
+            throw new AppException(
+                "Magacin se trenutno menja od strane drugog menadžera, pokušajte ponovo",
+                HttpStatus.CONFLICT
+            );
+        }
+
         Country country = countryRepository.findById(dto.countryId())
             .orElseThrow(() -> new AppException("Country not found", HttpStatus.NOT_FOUND));
         City city = cityRepository.findById(dto.cityId())
@@ -95,7 +106,7 @@ public class WarehouseService {
         warehouse.getSectors().clear();
         applyDto(warehouse, dto, country, city);
         return toDto(warehouseRepository.save(warehouse));
-    }
+}
 
     @Transactional
     @CacheEvict(value = "warehouses", allEntries = true)

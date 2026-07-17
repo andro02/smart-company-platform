@@ -20,27 +20,48 @@ import com.smartcompany.repository.user.UserRepository;
 import com.smartcompany.service.user.EmailService;
 import com.smartcompany.specification.CompanySpecification;
 
-import lombok.RequiredArgsConstructor;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CompanyService {
+
+    @Value("${app.email.enabled:true}")
+    private boolean emailEnabled;
 
     private final CompanyRepository companyRepository;
     private final CountryRepository countryRepository;
     private final CityRepository cityRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final CompanyService self; // self-injection, za pravilan @Transactional/@Async proxy poziv
+
+    @Autowired
+    public CompanyService(
+            CompanyRepository companyRepository,
+            CountryRepository countryRepository,
+            CityRepository cityRepository,
+            UserRepository userRepository,
+            EmailService emailService,
+            @Lazy CompanyService self) {
+        this.companyRepository = companyRepository;
+        this.countryRepository = countryRepository;
+        this.cityRepository = cityRepository;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.self = self;
+    }
 
     @Transactional
     public CompanyDetailDto createRequest(String ownerUsername, CompanyRequestDto dto) {
@@ -119,8 +140,22 @@ public class CompanyService {
         return toDto(company);
     }
 
-    @Transactional
+    /**
+     * Javni ulaz — NIJE @Transactional. Deleguje kritični, zaključavajući deo
+     * u self.decideTransactional() (kratka transakcija), a slanje email-a se
+     * radi OVDE, van transakcije, da se pesimistički lock nad Company redom
+     * ne drži tokom sporog SMTP poziva.
+     */
     public CompanyDetailDto decide(Long id, CompanyDecisionDto dto) {
+        Company saved = self.decideTransactional(id, dto);
+
+        self.sendDecisionEmailAsync(saved.getId());
+
+        return toDto(saved);
+    }
+
+    @Transactional
+    public Company decideTransactional(Long id, CompanyDecisionDto dto) {
         Company company;
         try {
             // PESIMISTIČKO ZAKLJUČAVANJE: findByIdForUpdate radi SELECT ... FOR
@@ -151,15 +186,35 @@ public class CompanyService {
             company.setRejectionReason(dto.rejectionReason());
         }
 
-        Company saved = companyRepository.save(company);
+        return companyRepository.save(company);
+    }
 
-        emailService.sendCompanyDecisionEmail(
-            saved.getOwner().getEmail(),
-            saved.getName(),
-            saved.getStatus(),
-            saved.getRejectionReason()
-        );
+    /**
+     * Radi u posebnom threadu (invoiceExecutor pool, već definisan u AsyncConfig
+     * za OrderService) — ne blokira response korisniku niti drži DB konekciju
+     * dok SMTP poziv traje.
+     */
+    @Async("invoiceExecutor")
+    @Transactional(readOnly = true)
+    public void sendDecisionEmailAsync(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+            .orElseThrow(() -> new AppException("Company not found", HttpStatus.NOT_FOUND));
 
-        return toDto(saved);
+        if (!emailEnabled) {
+            // System.out.println("[CompanyService] Email disabled (load testing mode) - skipping decision email for company " + companyId);
+            return;
+        }
+
+        try {
+            emailService.sendCompanyDecisionEmail(
+                company.getOwner().getEmail(),
+                company.getName(),
+                company.getStatus(),
+                company.getRejectionReason()
+            );
+        } 
+        catch (Exception e) {
+            System.err.println("[CompanyService] Failed to send decision email for company " + companyId + ": " + e.getMessage());
+        }
     }
 }

@@ -19,12 +19,17 @@ public interface WarehouseItemRepository extends JpaRepository<WarehouseItem, Lo
 
     // Zaključava sve redove ovog proizvoda (SELECT ... FOR UPDATE) dok se
     // transakcija ne završi. Poziva se iz OrderService.createOrder().
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+   @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000")})
-    @Query("SELECT wi FROM WarehouseItem wi WHERE wi.product.id = :productId AND wi.quantity > 0 ORDER BY wi.quantity DESC")
+    @Query("SELECT wi FROM WarehouseItem wi WHERE wi.product.id = :productId AND wi.quantity > 0 ORDER BY wi.id ASC")
     List<WarehouseItem> findByProductIdWithStock(@Param("productId") Long productId);
 
     Optional<WarehouseItem> findByWarehouseIdAndProductId(Long warehouseId, Long productId);
 
     boolean existsByProductId(Long productId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({@QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000")})
+    @Query("SELECT wi FROM WarehouseItem wi WHERE wi.product.id = :productId AND wi.quantity >= :minQuantity ORDER BY wi.id ASC")
+    List<WarehouseItem> findSingleWarehouseWithSufficientStock(@Param("productId") Long productId, @Param("minQuantity") Integer minQuantity);
 }

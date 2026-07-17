@@ -19,12 +19,13 @@ import com.smartcompany.repository.warehouse.WarehouseItemRepository;
 import com.smartcompany.service.user.EmailService;
 import com.smartcompany.service.user.PdfService;
 
-import lombok.RequiredArgsConstructor;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,8 +36,10 @@ import java.util.Comparator;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class OrderService {
+
+    @Value("${app.email.enabled:true}")
+    private boolean emailEnabled;
 
     private final OrderRepository orderRepository;
     private final WarehouseItemRepository warehouseItemRepository;
@@ -45,6 +48,26 @@ public class OrderService {
     private final UserRepository userRepository;
     private final PdfService pdfService;
     private final EmailService emailService;
+    private final OrderService self; // self-injection, za pravilan @Transactional proxy poziv
+
+    public OrderService(
+            OrderRepository orderRepository,
+            WarehouseItemRepository warehouseItemRepository,
+            CompanyRepository companyRepository,
+            ProductRepository productRepository,
+            UserRepository userRepository,
+            PdfService pdfService,
+            EmailService emailService,
+            @Lazy OrderService self) {
+        this.orderRepository = orderRepository;
+        this.warehouseItemRepository = warehouseItemRepository;
+        this.companyRepository = companyRepository;
+        this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.pdfService = pdfService;
+        this.emailService = emailService;
+        this.self = self;
+    }
 
     public List<CompanyDto> getMyCompanies(String username) {
         return companyRepository
@@ -58,12 +81,30 @@ public class OrderService {
             .toList();
     }
 
+    /**
+     * Javni ulaz — NIJE @Transactional. Deleguje kritični, zaključavajući deo
+     * u self.createOrderTransactional() (kratka transakcija), a PDF generisanje
+     * i slanje email-a rade se OVDE, van transakcije, da se pesimistički
+     * lock nad WarehouseItem redovima ne drži tokom sporog I/O (SMTP, PDF render).
+     */
+    public OrderResponseDto createOrder(String customerUsername, CreateOrderDto dto) {
+        Order saved = self.createOrderTransactional(customerUsername, dto);
+
+        try {
+            self.generateAndSendInvoiceAsync(saved.getId());
+        } catch (Exception e) {
+            System.err.println("[OrderService] Could not submit invoice task for order " + saved.getId() + ": " + e.getMessage());
+        }
+
+        return toDto(saved);
+    }
+
     @Transactional
     @Caching(evict = {
         @CacheEvict(value = "products", allEntries = true),
         @CacheEvict(value = "product", allEntries = true)
     })
-    public OrderResponseDto createOrder(String customerUsername, CreateOrderDto dto) {
+    public Order createOrderTransactional(String customerUsername, CreateOrderDto dto) {
         User customer = userRepository.findById(customerUsername)
             .orElseThrow(() -> new AppException("Korisnik nije pronađen", HttpStatus.NOT_FOUND));
 
@@ -78,9 +119,6 @@ public class OrderService {
             throw new AppException("Firma nije odobrena", HttpStatus.BAD_REQUEST);
         }
 
-        // Sortiraj stavke po productId — svaka transakcija tada zaključava
-        // proizvode u istom redosledu, što sprečava deadlock kada dve
-        // porudžbine istovremeno traže iste proizvode u različitom redosledu.
         List<CreateOrderDto.OrderItemDto> sortedItems = dto.items().stream()
             .sorted(Comparator.comparing(CreateOrderDto.OrderItemDto::productId))
             .toList();
@@ -99,27 +137,38 @@ public class OrderService {
                         HttpStatus.BAD_REQUEST);
                 }
 
-                // PESIMISTIČKO ZAKLJUČAVANJE: findByProductIdWithStock sada radi
-                // SELECT ... FOR UPDATE nad svim WarehouseItem redovima ovog
-                // proizvoda. Druga transakcija koja traži isti proizvod čeka dok
-                // ova ne commit-uje/rollback-uje, pa je totalAvailable ispod
-                // uvek tačan — nema više lost update-a nad zalihama.
-                List<WarehouseItem> warehouseItems =
-                    warehouseItemRepository.findByProductIdWithStock(product.getId());
+                List<WarehouseItem> toDeduct;
 
-                int totalAvailable = warehouseItems.stream()
-                    .mapToInt(WarehouseItem::getQuantity).sum();
+                // Pokušaj prvo da nađeš JEDAN magacin koji sam pokriva celu količinu —
+                // zaključava samo taj jedan red, ne sve magacine sa tim proizvodom.
+                List<WarehouseItem> singleSufficient =
+                    warehouseItemRepository.findSingleWarehouseWithSufficientStock(product.getId(), itemDto.quantity());
 
-                if (totalAvailable < itemDto.quantity()) {
-                    throw new AppException(
-                        "Nedovoljno zaliha za: " + product.getName() +
-                        " (traženo: " + itemDto.quantity() + ", dostupno: " + totalAvailable + ")",
-                        HttpStatus.CONFLICT
-                    );
+                if (!singleSufficient.isEmpty()) {
+                    toDeduct = List.of(singleSufficient.get(0));
+                } else {
+                    // Nijedan pojedinačni magacin nema dovoljno — padni na skupljanje iz više,
+                    // isti pristup kao pre (zaključava sve redove za taj proizvod).
+                    List<WarehouseItem> warehouseItems =
+                        warehouseItemRepository.findByProductIdWithStock(product.getId());
+
+                    int totalAvailable = warehouseItems.stream()
+                        .mapToInt(WarehouseItem::getQuantity).sum();
+
+                    if (totalAvailable < itemDto.quantity()) {
+                        throw new AppException(
+                            "Nedovoljno zaliha za: " + product.getName() +
+                            " (traženo: " + itemDto.quantity() + ", dostupno: " + totalAvailable + ")",
+                            HttpStatus.CONFLICT
+                        );
+                    }
+
+                    toDeduct = new ArrayList<>(warehouseItems);
+                    toDeduct.sort(Comparator.comparing(WarehouseItem::getQuantity).reversed());
                 }
 
                 int remaining = itemDto.quantity();
-                for (WarehouseItem wi : warehouseItems) {
+                for (WarehouseItem wi : toDeduct) {
                     if (remaining <= 0) break;
                     int deduct = Math.min(wi.getQuantity(), remaining);
                     wi.setQuantity(wi.getQuantity() - deduct);
@@ -136,8 +185,6 @@ public class OrderService {
                 total = total.add(product.getPrice().multiply(BigDecimal.valueOf(itemDto.quantity())));
             }
         } catch (PessimisticLockingFailureException e) {
-            // Nije uspelo zaključavanje na vreme (npr. druga porudžbina predugo
-            // drži iste redove) — javi korisniku da pokuša ponovo umesto 500-ke.
             throw new AppException(
                 "Sistem je trenutno zauzet obradom porudžbina za ove proizvode, pokušajte ponovo",
                 HttpStatus.CONFLICT
@@ -152,12 +199,33 @@ public class OrderService {
         order.setItems(orderItems);
         orderItems.forEach(oi -> oi.setOrder(order));
 
-        Order saved = orderRepository.save(order);
+        return orderRepository.save(order);
+    }
 
-        byte[] pdf = pdfService.generateInvoice(saved);
-        emailService.sendInvoice(customer.getEmail(), pdf, saved.getId());
+    /**
+     * Radi u posebnom threadu, van glavnog request threada — korisnik dobija
+     * odgovor odmah nakon commit-a porudžbine, ne čeka PDF/email.
+     * @Transactional(readOnly = true) učitava order + lazy relacije (customer, items)
+     * u SVOM transaction/session kontekstu, jer se izvršava nezavisno od originalnog zahteva.
+     */
+    @Async("invoiceExecutor")
+    @Transactional(readOnly = true)
+    public void generateAndSendInvoiceAsync(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new AppException("Order not found", HttpStatus.NOT_FOUND));
 
-        return toDto(saved);
+        try {
+            byte[] pdf = pdfService.generateInvoice(order);
+
+            if (emailEnabled) {
+                emailService.sendInvoice(order.getCustomer().getEmail(), pdf, order.getId());
+            } 
+            // else {
+            //     System.out.println("[OrderService] Email disabled (load testing mode) - PDF generated but not sent for order " + orderId);
+            // }
+        } catch (Exception e) {
+            System.err.println("[OrderService] Failed to generate/send invoice for order " + orderId + ": " + e.getMessage());
+        }
     }
 
     private OrderResponseDto toDto(Order order) {

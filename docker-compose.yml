@@ -39,6 +39,7 @@ services:
 
   postgres:
     image: postgres:16
+    shm_size: 1gb
     environment:
       POSTGRES_DB: smartcompanydb
       POSTGRES_USER: postgres

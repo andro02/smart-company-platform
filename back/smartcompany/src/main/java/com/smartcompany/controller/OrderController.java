@@ -29,7 +29,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/orders")
 @RequiredArgsConstructor
 @Tag(name = "Orders", description = "Kreiranje porudžbina i pomoćni podaci za formu porudžbine")
 public class OrderController {

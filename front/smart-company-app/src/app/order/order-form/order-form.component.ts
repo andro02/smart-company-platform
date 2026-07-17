@@ -134,14 +134,14 @@ export class OrderFormComponent implements OnInit, OnDestroy {
   }
 
   loadCategories(): void {
-    this.axiosService.request('GET', '/api/orders/categories', null)
+    this.axiosService.request('GET', '/orders/categories', null)
       .then((res: any) => this.categories = res.data)
       .catch(() => {});
   }
 
   loadCompanies(): void {
     this.isLoadingCompanies = true;
-    this.axiosService.request('GET', '/api/orders/my-companies', null)
+    this.axiosService.request('GET', '/orders/my-companies', null)
       .then((res: any) => this.companies = res.data)
       .catch(() => this.errorMessage = 'Greška pri učitavanju firmi.')
       .finally(() => this.isLoadingCompanies = false);
@@ -160,7 +160,7 @@ export class OrderFormComponent implements OnInit, OnDestroy {
     if (this.minPrice != null) params.set('minPrice', this.minPrice.toString());
     if (this.maxPrice != null) params.set('maxPrice', this.maxPrice.toString());
 
-    this.axiosService.request('GET', `/api/orders/products?${params}`, null)
+    this.axiosService.request('GET', `/orders/products?${params}`, null)
       .then((res: any) => {
         const page: Page<Product> = res.data;
         this.products = page.content;
@@ -236,7 +236,7 @@ export class OrderFormComponent implements OnInit, OnDestroy {
       items: this.cart.map(i => ({ productId: i.product.id, quantity: i.quantity })),
     };
 
-    this.axiosService.request('POST', '/api/orders', payload)
+    this.axiosService.request('POST', '/orders', payload)
       .then(() => {
         this.successMessage = 'Porudžbina je uspešno kreirana! Faktura je poslata na vaš email.';
         this.cart = [];
