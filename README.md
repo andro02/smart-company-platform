@@ -83,17 +83,17 @@ Simulator generiše podatke u realnom vremenu za fabrike, magacine i vozila. Pok
 ```bash
 # Terminal 1 — fabrika
 cd factory-simulator
-set SPRING_CONFIG_LOCATION=classpath:/application-factory.properties
+$env:SPRING_CONFIG_LOCATION="classpath:/application-factory.properties"
 mvn spring-boot:run
 
 # Terminal 2 — magacin
 cd factory-simulator
-set SPRING_CONFIG_LOCATION=classpath:/application-warehouse.properties
+$env:SPRING_CONFIG_LOCATION="classpath:/application-warehouse.properties"
 mvn spring-boot:run
 
 # Terminal 3 — vozilo
 cd factory-simulator
-set SPRING_CONFIG_LOCATION=classpath:/application-vehicle.properties
+$env:SPRING_CONFIG_LOCATION="classpath:/application-vehicle.properties"
 mvn spring-boot:run
 ```
 
