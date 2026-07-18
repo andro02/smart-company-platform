@@ -162,7 +162,7 @@ public class UserService {
         return toUserDto(userRepository.save(user));
     }
 
-    @CacheEvict(value = "users", key = "#username")
+    @CacheEvict(value = "users", key = "#result.username")
     public UserDto changePasswordAndReturn(ChangePasswordDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDto loggedUser = (UserDto) authentication.getPrincipal();
