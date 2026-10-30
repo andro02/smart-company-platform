@@ -13,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URL;
-
 @RestController
 @RequestMapping("/files")
 @Tag(name = "File Storage", description = "Presigned S3 URL-ovi za upload i pregled fajlova")
@@ -63,7 +61,6 @@ public class FileStorageController {
     @SecurityRequirements
     @GetMapping("/presigned-url/get")
     public ResponseEntity<String> getDownloadUrl(@RequestParam("key") String key) {
-        URL url = fileStorageService.generatePreSignedGetUrl(key);
-        return ResponseEntity.ok(url.toString());
+        return ResponseEntity.ok(fileStorageService.generatePreSignedGetUrl(key));
     }
 }

@@ -1,0 +1,154 @@
+# The whole platform on one small server (1 GB of RAM, plus swap): PostgreSQL,
+# InfluxDB, RabbitMQ, Redis, the Spring Boot backend, the simulator and the
+# Angular application behind Caddy, which also takes care of HTTPS.
+#
+# The application images are built by GitHub Actions
+# (.github/workflows/images.yml); the server only pulls them, since building
+# on a machine this small takes very long. Every service gets as little
+# memory as it works with. Settings and passwords come from .env (see
+# .env.example), which also points docker compose at this file.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: smartcompanydb
+      POSTGRES_USER: smartcompany
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    command: postgres -c shared_buffers=32MB -c work_mem=2MB -c max_connections=20
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./data/smartcompanydb.dump:/dump/smartcompanydb.dump:ro
+      # runs once, when the database volume is created for the first time
+      - ./deploy/db/restore-dump.sh:/docker-entrypoint-initdb.d/restore-dump.sh:ro
+    healthcheck:
+      # over TCP, which only succeeds after the initial restore has finished
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U smartcompany -d smartcompanydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    restart: unless-stopped
+
+  influxdb:
+    image: influxdb:2.7
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD:?set INFLUXDB_PASSWORD in .env}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:?set INFLUXDB_TOKEN in .env}
+      DOCKER_INFLUXDB_INIT_ORG: smartcompany
+      DOCKER_INFLUXDB_INIT_BUCKET: smartcompany
+      # sensor readings older than this are deleted, so the disk doesn't fill up
+      DOCKER_INFLUXDB_INIT_RETENTION: 30d
+      INFLUXD_STORAGE_CACHE_MAX_MEMORY_SIZE: "33554432"
+      INFLUXD_STORAGE_CACHE_SNAPSHOT_MEMORY_SIZE: "8388608"
+      INFLUXD_REPORTING_DISABLED: "true"
+      GOMEMLIMIT: 120MiB
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    restart: unless-stopped
+
+  rabbitmq:
+    # without the management plugin, which takes memory and isn't needed here
+    image: rabbitmq:3.13-alpine
+    # RabbitMQ keeps its data in a folder named after the host name
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: smartcompany
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+      # one scheduler thread, and no busy waiting, which would keep the CPU
+      # busy while idle
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+S 1:1 +A 2 +sbwt none +sbwtdcpu none +sbwtdio none"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4-alpine
+    # only a cache: a small memory limit and nothing saved to disk
+    command: >
+      redis-server --requirepass ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+      --maxmemory 32mb --maxmemory-policy allkeys-lru --save ""
+    restart: unless-stopped
+
+  backend:
+    image: ghcr.io/andro02/smart-company-platform-backend:latest
+    build: ./back/smartcompany
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartcompanydb
+      SPRING_DATASOURCE_USERNAME: smartcompany
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: "5"
+      SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_ACCEPTCOUNT: "50"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: smartcompany
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN}
+      INFLUXDB_ORG: smartcompany
+      INFLUXDB_BUCKET: smartcompany
+      SECURITY_JWT_TOKEN_SECRET_KEY: ${JWT_SECRET:?set JWT_SECRET in .env}
+      # no emails from the demo (registration activates accounts right away)
+      APP_EMAIL_ENABLED: "false"
+      SPRING_MAIL_USERNAME: demo@localhost
+      # uploaded files on the server's disk instead of AWS S3
+      APP_STORAGE_TYPE: local
+      APP_STORAGE_LOCAL_DIR: /data/files
+      # demo accounts for every role (see demo/DemoAccounts.java)
+      APP_DEMO_ENABLED: "true"
+      APP_DEMO_PASSWORD: ${DEMO_PASSWORD:-demo1234}
+      JAVA_TOOL_OPTIONS: "-Xmx256m -XX:MaxMetaspaceSize=160m -Xss512k -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
+    volumes:
+      - ./data/files:/data/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      influxdb:
+        condition: service_started
+    restart: unless-stopped
+
+  simulator:
+    image: ghcr.io/andro02/smart-company-platform-simulator:latest
+    build: ./factory-simulator
+    environment:
+      # factory, warehouse and vehicle in one process instead of three
+      SPRING_PROFILES_ACTIVE: factory,warehouse,vehicle
+      SPRING_MAIN_WEBAPPLICATIONTYPE: none
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: smartcompany
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      JAVA_TOOL_OPTIONS: "-Xmx48m -XX:MaxMetaspaceSize=96m -Xss256k -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
+    depends_on:
+      - rabbitmq
+      - backend
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/andro02/smart-company-platform-web:latest
+    build:
+      context: .
+      dockerfile: deploy/web/Dockerfile
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-http://localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  influxdb-data:
+  rabbitmq-data:
+  caddy-data:

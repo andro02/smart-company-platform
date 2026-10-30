@@ -1,0 +1,23 @@
+# SITE_ADDRESS is "http://localhost" for local runs and a host name such as
+# "130-61-12-34.sslip.io" on the server, where Caddy obtains HTTPS automatically
+{$SITE_ADDRESS:http://localhost} {
+    encode zstd gzip
+
+    # uploads go through the backend (local file storage), up to 20 MB
+    request_body {
+        max_size 20MB
+    }
+
+    # Spring Boot REST API (its context path is /api)
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    # Angular application: prerendered pages, otherwise index.html, which
+    # handles the route in the browser
+    handle {
+        root * /srv/app
+        try_files {path} {path}/index.html /index.html
+        file_server
+    }
+}
