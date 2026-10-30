@@ -41,6 +41,10 @@ public class SecurityConfig {
                     // Fajlovi
                     .requestMatchers(HttpMethod.GET, "/files/presigned-url/get").permitAll()
                     .requestMatchers(HttpMethod.PUT, "/files/presigned-url/put").permitAll()
+                    // Fajlovi na disku servera (app.storage.type=local): upload je
+                    // zasticen potpisom u URL-u, kao presigned S3 URL
+                    .requestMatchers(HttpMethod.GET, "/files/local/**").permitAll()
+                    .requestMatchers(HttpMethod.PUT, "/files/local/**").permitAll()
                     // Promena lozinke dozvoli svima koji imaju validan token
                     .requestMatchers(HttpMethod.PUT, "/account/change-password").authenticated()
                     // Proizvodi i kategorije javno citanje

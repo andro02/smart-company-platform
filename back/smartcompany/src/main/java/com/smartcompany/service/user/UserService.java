@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.smartcompany.demo.DemoAccounts;
 import com.smartcompany.dto.cache.CachedPage;
 import com.smartcompany.dto.user.ChangePasswordDto;
 import com.smartcompany.dto.user.CredentialsDto;
@@ -42,6 +44,10 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private CacheManager cacheManager;
+    @Autowired
+    private DemoAccounts demoAccounts;
+    @Value("${app.email.enabled:true}")
+    private boolean emailEnabled;
 
     public List<UserDto> getAll() {
         return toUserDtos(userRepository.findAll());
@@ -101,6 +107,13 @@ public class UserService {
         user.setMustChangePassword(false);
         user.setPassword(passwordEncoder.encode(CharBuffer.wrap(userDto.password())));
 
+        // without email (e.g. the public demo) there is no way to receive the
+        // activation link, so the account is active right away
+        if (!emailEnabled) {
+            user.setActive(true);
+            return toUserDto(userRepository.save(user));
+        }
+
         String token = tokenService.generateActivationToken();
         user.setActivationToken(token);
         String activationLink = "http://127.0.0.1/activate?username=" + user.getUsername() + "&token=" + token;
@@ -142,6 +155,7 @@ public class UserService {
         @CacheEvict(value = "managers", allEntries = true)
     })
     public UserDto blockManager(String username) {
+        demoAccounts.ensureCanBeChanged(username);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
         if (user.getType() == UserType.SuperAdmin) {
@@ -166,6 +180,7 @@ public class UserService {
     public UserDto changePasswordAndReturn(ChangePasswordDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDto loggedUser = (UserDto) authentication.getPrincipal();
+        demoAccounts.ensureCanBeChanged(loggedUser.getUsername());
         User user = userRepository.findByUsername(loggedUser.getUsername())
                 .orElseThrow(() -> new AppException("Unknown user", HttpStatus.NOT_FOUND));
 
@@ -189,11 +204,21 @@ public class UserService {
             updated.setPassword(passwordEncoder.encode(CharBuffer.wrap(signUpDto.password())));
         }
 
+        // a demo account's profile can be edited, but not what lets everyone
+        // log in with it
+        if (demoAccounts.isDemoAccount(username)) {
+            updated.setPassword(user.getPassword());
+            updated.setType(user.getType());
+            updated.setActive(true);
+            updated.setMustChangePassword(false);
+        }
+
         userRepository.deleteById(username);
         return toUserDto(userRepository.save(updated));
     }
 
     public void delete(String username) {
+        demoAccounts.ensureCanBeChanged(username);
         userRepository.deleteById(username);
     }
 

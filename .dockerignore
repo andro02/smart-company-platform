@@ -1,0 +1,7 @@
+# build context of deploy/web/Dockerfile is the repository root
+.git
+data
+**/node_modules
+**/dist
+**/.angular
+**/target
