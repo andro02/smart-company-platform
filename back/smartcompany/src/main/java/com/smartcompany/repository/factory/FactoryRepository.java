@@ -1,5 +1,7 @@
 package com.smartcompany.repository.factory;
 
+import com.smartcompany.dto.factory.FactorySummaryDto;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +25,12 @@ public interface FactoryRepository extends JpaRepository<Factory, Long>, JpaSpec
 
     @Query("SELECT f FROM Factory f JOIN f.products p WHERE p.id = :productId")
     List<Factory> findByProductId(@Param("productId") Long productId);
+
+    // Samo id i naziv fabrika koje prave proizvod: proizvod moze da pravi na
+    // hiljade fabrika, a cele fabrike (sa gradom i drzavom) su ovde nepotrebne
+    @Query("SELECT new com.smartcompany.dto.factory.FactorySummaryDto(f.id, f.name) "
+         + "FROM Factory f JOIN f.products p WHERE p.id = :productId ORDER BY f.name")
+    List<FactorySummaryDto> findSummariesByProductId(@Param("productId") Long productId);
 
     // Zaključava jednu fabriku — koristi se u handleHeartbeat() da spreči
     // lost update sa checkHeartbeats().

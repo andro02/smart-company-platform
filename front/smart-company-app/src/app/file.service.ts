@@ -42,6 +42,11 @@ export class FileService {
   }
 
   getDownloadUrl(key: string): Observable<string> {
+    // nothing to show for a missing key (some records have none, and the
+    // login token carries a missing profile picture as the text "null")
+    if (!key || key === 'null') {
+      return of('');
+    }
     if (this.urlCache.has(key)) {
       return of(this.urlCache.get(key)!);
     }
