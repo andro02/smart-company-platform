@@ -177,8 +177,16 @@ docker compose pull
 docker compose up -d
 ```
 
-`deploy/reset-demo.sh` puts the demo back to its starting state (database from
-the dump, empty cache, original uploads); run it nightly from cron:
+`deploy/reset-demo.sh` puts the demo back to its starting state (database, empty
+cache, original uploads). It copies the database from an untouched template,
+which takes a minute or two instead of restoring the dump again; save the
+template once after the first start:
+
+```bash
+sudo sh deploy/make-template.sh
+```
+
+Then run the reset nightly from root's cron (`sudo crontab -e`):
 
 ```bash
 30 3 * * * sh /home/ubuntu/app/smart-company-platform/deploy/reset-demo.sh >> /home/ubuntu/app/reset-demo.log 2>&1
