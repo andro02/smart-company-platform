@@ -40,7 +40,10 @@
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary mt-2 w-100">Log In</button>
+                <button type="submit" class="btn btn-primary mt-2 w-100" [disabled]="loggingIn">
+                    <span *ngIf="loggingIn" class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                    {{ loggingIn ? 'Logging in…' : 'Log In' }}
+                </button>
                 <div id="register-link" class="text-right mt-3">
                     <a [routerLink]="['/register']" class="text-info">Register here</a>
                 </div>
