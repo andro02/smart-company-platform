@@ -44,8 +44,9 @@ export class NavbarComponent implements OnInit {
 
   fetchImage(): void {
     const user = this.axios.getUser();
-    // accounts without a profile picture (e.g. the demo accounts)
-    if (user != null && !user.image) {
+    // accounts without a profile picture (e.g. the demo accounts); the token
+    // carries a missing picture as the text "null"
+    if (user != null && (!user.image || user.image === 'null')) {
       this.preSignedUrl = DEFAULT_AVATAR;
       return;
     }

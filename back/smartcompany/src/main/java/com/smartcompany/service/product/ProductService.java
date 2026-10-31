@@ -188,9 +188,10 @@ public class ProductService {
 
     public ProductDto toDtoWithFactories(Product product) {
         ProductDto base = toDto(product);
-        List<FactorySummaryDto> factories = factoryRepository.findByProductId(product.getId()).stream()
-                .map(f -> new FactorySummaryDto(f.getId(), f.getName()))
-                .toList();
+        // only ids and names, read straight from the database: a product can be
+        // made in thousands of factories, and loading whole factories (with
+        // their city and country) took seconds
+        List<FactorySummaryDto> factories = factoryRepository.findSummariesByProductId(product.getId());
         base.setFactories(factories);
         return base;
     }
