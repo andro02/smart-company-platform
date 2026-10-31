@@ -11,7 +11,10 @@ import lombok.*;
     indexes = {
         @Index(name = "idx_witem_warehouse", columnList = "warehouse_id"),
         @Index(name = "idx_witem_product", columnList = "product_id"),
-        @Index(name = "idx_witem_warehouse_product", columnList = "warehouse_id, product_id")
+        @Index(name = "idx_witem_warehouse_product", columnList = "warehouse_id, product_id"),
+        // the total stock of a product (shown with every product) is summed
+        // from this index alone, without reading the table
+        @Index(name = "idx_witem_product_quantity", columnList = "product_id, quantity")
     }
 )
 @NoArgsConstructor @AllArgsConstructor @Data

@@ -30,6 +30,10 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(requests -> requests
+                    // Spring's error page: when a request fails (a missing file, a
+                    // timeout...), Spring forwards it here; without this the real
+                    // error became a 401, and the frontend logged the user out
+                    .requestMatchers("/error").permitAll()
                     // Swagger
                     .requestMatchers("/swagger-ui/**", "/swagger-ui", "/api-docs/**", "/api-docs").permitAll()
                     // Auth

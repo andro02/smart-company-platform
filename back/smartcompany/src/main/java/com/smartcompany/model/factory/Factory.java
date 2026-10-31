@@ -66,7 +66,12 @@ public class Factory {
     @JoinTable(
         name = "factory_product",
         joinColumns = @JoinColumn(name = "factory_id"),
-        inverseJoinColumns = @JoinColumn(name = "product_id")
+        inverseJoinColumns = @JoinColumn(name = "product_id"),
+        // looked up both ways: a factory's products, and the factories of a product
+        indexes = {
+            @Index(name = "idx_factory_product_factory", columnList = "factory_id"),
+            @Index(name = "idx_factory_product_product", columnList = "product_id")
+        }
     )
     private List<Product> products = new ArrayList<>();
 }
