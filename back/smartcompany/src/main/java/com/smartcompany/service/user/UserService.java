@@ -49,6 +49,10 @@ public class UserService {
     @Value("${app.email.enabled:true}")
     private boolean emailEnabled;
 
+    public boolean hasAnyUsers() {
+        return userRepository.count() > 0;
+    }
+
     public List<UserDto> getAll() {
         return toUserDtos(userRepository.findAll());
     }

@@ -13,3 +13,6 @@ npm-debug.log
 
 seed_script.py
 smartcompanydb.dump
+
+# server data: database dump and uploaded files (see docker-compose.prod.yml)
+data/

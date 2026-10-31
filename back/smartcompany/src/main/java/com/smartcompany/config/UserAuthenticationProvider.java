@@ -38,8 +38,9 @@ public class UserAuthenticationProvider {
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
 
-        List<UserDto> currentUserList = userService.getAll();
-        if (currentUserList.isEmpty()) {
+        // only counts the users: loading all of them (there can be hundreds of
+        // thousands after load testing) took too much memory on startup
+        if (!userService.hasAnyUsers()) {
             String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz";
             StringBuilder salt = new StringBuilder();
             Random rnd = new Random();
