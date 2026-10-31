@@ -78,7 +78,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/smartcompanydb
       SPRING_DATASOURCE_USERNAME: smartcompany
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: "5"
+      # six RabbitMQ listeners, three scheduled heartbeat checks and the web
+      # requests all need a connection at times; with fewer they wait and fail
+      SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: "10"
       SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: "1"
       SERVER_TOMCAT_THREADS_MAX: "20"
       SERVER_TOMCAT_ACCEPTCOUNT: "50"
