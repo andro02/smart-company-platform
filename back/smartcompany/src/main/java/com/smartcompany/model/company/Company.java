@@ -14,7 +14,10 @@ import com.smartcompany.model.user.User;
     name = "company",
     indexes = {
         @Index(name = "idx_company_owner", columnList = "owner_username"),
-        @Index(name = "idx_company_status", columnList = "status")
+        @Index(name = "idx_company_status", columnList = "status"),
+        // lets the number of companies with a status be counted from the
+        // index alone (the paged list of requests counts them on every page)
+        @Index(name = "idx_company_status_id", columnList = "status, id")
     }
 )
 @NoArgsConstructor @AllArgsConstructor @Data

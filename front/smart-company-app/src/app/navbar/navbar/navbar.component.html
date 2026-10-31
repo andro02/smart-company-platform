@@ -18,7 +18,7 @@
         <span>
             <ul class="navbar-nav ml-auto">
                 <li *ngIf="preSignedUrl != null" class="d-flex justify-content-center align-items-center nav-item active mr-2">
-                    <img [src]="preSignedUrl" alt="Fetched Image" (error)="fetchImage()" class="rounded-circle article-img image"/>
+                    <img [src]="preSignedUrl" alt="Fetched Image" (load)="imageRetried = false" (error)="onImageError()" class="rounded-circle article-img image"/>
                 </li>
                 <li *ngIf="axios.getRole() != null" class="nav-item active">
                     <a class="nav-link">{{axios.getUsername()}}</a>

@@ -17,6 +17,8 @@ import { CustomerNavbarComponent } from '../customer-navbar/customer-navbar.comp
 export class NavbarComponent implements OnInit {
 
   preSignedUrl: string | null = null;
+  // whether the current picture already failed once (see onImageError)
+  imageRetried = false;
 
   constructor(public axios: AxiosService, private router: Router, public fileService: FileService, private route: ActivatedRoute) {
     this.fetchImage();
@@ -31,12 +33,29 @@ export class NavbarComponent implements OnInit {
   }
 
   fetchImage(): void {
-    if (this.axios.getUser() != null) {
-      this.fileService.getDownloadUrl(this.axios.getUser()!.image).subscribe({
+    const user = this.axios.getUser();
+    // accounts without a profile picture (e.g. the demo accounts) show none
+    if (user != null && !user.image) {
+      this.preSignedUrl = null;
+      return;
+    }
+    if (user != null) {
+      this.fileService.getDownloadUrl(user.image).subscribe({
         next: (response: string) => { this.preSignedUrl = response; },
         error: (err: any) => { console.log(err); }
       });
     }
+  }
+
+  onImageError(): void {
+    // the presigned URL may have expired, so ask for a new one, but only once:
+    // a picture that is really missing would otherwise be requested endlessly
+    if (this.imageRetried) {
+      this.preSignedUrl = null;
+      return;
+    }
+    this.imageRetried = true;
+    this.fetchImage();
   }
 
   logOut(): void {
