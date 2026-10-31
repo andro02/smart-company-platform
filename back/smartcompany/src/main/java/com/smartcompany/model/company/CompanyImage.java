@@ -4,7 +4,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "company_image")
+@Table(
+    name = "company_image",
+    // a company's images are loaded by company_id for every company in a list
+    indexes = @Index(name = "idx_company_image_company", columnList = "company_id")
+)
 @NoArgsConstructor @AllArgsConstructor @Data
 public class CompanyImage {
 
