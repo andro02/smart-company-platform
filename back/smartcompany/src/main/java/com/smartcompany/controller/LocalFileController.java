@@ -59,7 +59,18 @@ public class LocalFileController {
     @SecurityRequirements
     @GetMapping("/{folder}/{name:.+}")
     public ResponseEntity<Resource> download(@PathVariable String folder, @PathVariable String name) {
-        Path file = storage.resolve(folder + "/" + name);
+        return serve(storage.resolve(folder + "/" + name), name);
+    }
+
+    // files from older data that were saved without a folder
+    @Operation(summary = "Prikaz/preuzimanje fajla bez foldera (stariji podaci)")
+    @SecurityRequirements
+    @GetMapping("/{name:.+}")
+    public ResponseEntity<Resource> downloadTopLevel(@PathVariable String name) {
+        return serve(storage.resolve(name), name);
+    }
+
+    private ResponseEntity<Resource> serve(Path file, String name) {
         if (!Files.isRegularFile(file)) {
             return ResponseEntity.notFound().build();
         }

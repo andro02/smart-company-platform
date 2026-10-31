@@ -46,13 +46,14 @@ public class LocalFileStorageService implements FileStorageService {
     private static final long UPLOAD_URL_VALIDITY_SECONDS = 15 * 60;
     private static final long MAX_FILE_BYTES = 20L * 1024 * 1024; // same as nginx's limit
 
+    // the folders the frontend uploads to (see getUploadUrl calls there)
     private static final Set<String> FOLDERS = Set.of(
-            "profile-images", "product-images", "factory-images",
-            "warehouse-images", "vehicle-images", "company-docs");
+            "profile-images", "product-images", "factory-images", "warehouse-images",
+            "vehicle-images", "company-images", "company-documents");
 
     // generated names only (a UUID and an extension), so a key can never
     // reach outside the storage folder
-    private static final Pattern FILE_NAME = Pattern.compile("[A-Za-z0-9-]{1,64}(\\.[A-Za-z0-9]{1,8})?");
+    private static final Pattern FILE_NAME = Pattern.compile("[A-Za-z0-9_-]{1,80}(\\.[A-Za-z0-9]{1,8})?");
 
     private final Path root;
     private final byte[] signingKey;
@@ -116,12 +117,18 @@ public class LocalFileStorageService implements FileStorageService {
         Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    /** Path of a stored file, or an error for keys that aren't ours. */
+    /**
+     * Path of a stored file, or an error for keys that aren't ours. Keys are
+     * "folder/name"; older data also has files without a folder (e.g. profile
+     * pictures saved as "username-uuid.jpg"), which are kept at the top level.
+     */
     public Path resolve(String key) {
         int slash = key.indexOf('/');
-        if (slash < 0
-                || !FOLDERS.contains(key.substring(0, slash))
-                || !FILE_NAME.matcher(key.substring(slash + 1)).matches()) {
+        boolean valid = slash < 0
+                ? FILE_NAME.matcher(key).matches()
+                : FOLDERS.contains(key.substring(0, slash))
+                        && FILE_NAME.matcher(key.substring(slash + 1)).matches();
+        if (!valid) {
             throw new AppException("Unknown file", HttpStatus.NOT_FOUND);
         }
         return root.resolve(key).normalize();
