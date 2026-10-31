@@ -16,6 +16,9 @@ export class LoginComponent {
 
   loginForm: FormGroup;
   errorMessage: string = '';
+  // while the login request is on its way (it can take a few seconds on the
+  // demo server): shows a spinner and stops the form being sent twice
+  loggingIn = false;
 
   constructor(private formBuilder: FormBuilder, private axiosService: AxiosService, private router: Router) {
     this.loginForm = this.formBuilder.group({
@@ -29,7 +32,9 @@ export class LoginComponent {
       this.loginForm.markAllAsTouched();
       return;
     }
+    if (this.loggingIn) return;
     this.errorMessage = '';
+    this.loggingIn = true;
 
     const loginData = this.loginForm.value;
     const credentials = new Credentials(loginData.username, loginData.password);
@@ -57,6 +62,9 @@ export class LoginComponent {
       .catch(error => {
         this.axiosService.setAuthToken(null);
         this.errorMessage = error?.response?.data?.message || 'Pogrešno korisničko ime ili lozinka.';
+      })
+      .finally(() => {
+        this.loggingIn = false;
       });
   }
 }
